@@ -3,6 +3,7 @@ defmodule Commuter.Train do
 
   defstruct [
     :arrival_time,
+    :time_to_station,
     :location,
     :train_id,
     :direction,

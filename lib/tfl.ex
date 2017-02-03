@@ -13,10 +13,7 @@ defmodule Commuter.Tfl do
   def call_station(station_id, line_id) do
     "https://api.tfl.gov.uk/Line/#{line_id}/Arrivals?stopPointId=#{station_id}"
     |> HTTPotion.get
-    |> take_body
   end
-
-  defp take_body(%HTTPotion.Response{body: body}), do: body
 
   #TODO: check that HTTPotion did not return an error
 
@@ -35,8 +32,12 @@ defmodule Commuter.Tfl do
   end
 
   defp remove_ms(timestamp) do
-    [time, _ms] = String.split(timestamp, ".")
-    time
+    case String.split(timestamp, ".") do
+      [time, _ms] ->
+        time
+      [time] ->
+        timestamp
+    end
   end
 
   defp add_timezone(string), do: "#{string}Z"

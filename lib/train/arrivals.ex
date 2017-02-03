@@ -1,49 +1,90 @@
 defmodule Commuter.Train.Arrivals do
-  defstruct [:station_id, :line_id, :timestamp, inbound: [], outbound: []]
+  defstruct [
+    :station_id,
+    :line_id,
+    timestamp: Timex.zero,
+    inbound: [],
+    outbound: []
+  ]
   alias Commuter.{Train,Tfl}
   alias Commuter.Train.Arrivals
 
   @tooting "940GZZLUTBC"
   @line "northern"
 
-  def start(station_id, line_id) do
+  def start(station_id \\ @tooting, line_id \\ @line) do
     init = initialise(station_id, line_id)
     Task.start_link(fn -> listen(init) end)
   end
 
-  def initialise(station_id, line_id) do
+  def initialise(station_id \\ @tooting, line_id \\ @line) do
     %Arrivals{station_id: station_id, line_id: line_id}
-    |> get_arrivals
+    |> run
   end
 
-  #TODO: this!
-  # need to listen out for :get requests
-  # when one arrives, check the cached timestamp vs the current time
-  # if it's more than 60 seconds, go fetch a new arrival time and return it
-  # otherwise, return the cached data to the client
-  defp listen(%Arrivals{} = cache) do
-    # receive do
-    #   {:get, line_id, caller} ->
-    #     send caller, Map.get(map, line_id)
-    #     listen(map)
-    #   {:put, line_id, times} ->
-    #     Map.put(map, line_id, times)
-    #     |> listen
-    # end
+  def listen(%Arrivals{} = cache) do
+    receive do
+      {:get, caller} ->
+        result = run(cache)
+        send caller, {:ok, result}
+        listen(result)
+    end
   end
+
 
   @doc """
-  Given a station id and a line id, calls TFL for arrivals at the given station
-  on the given line and returns a timestamped `Arrivals` struct containing
-  trains expected at the given station, on the given line.
+    This code is executed when a request arrives to the process - the first
+    step is to check how long has elapsed since the last response was cached
+    (the cache is passed to this function.) If it was made less than 60 seconds
+    ago, the cache will be returned unaltered.
 
-  The struct contains two lists (:inbound and :outbound) of Train structs. For
-  details on a train struct, see the `Commuter.Train` module.
+    If it was longer than 60 seconds ago, then this function calls TFL and
+    updates the cache struct based on the latest arrivals expected at the given
+    station and line.
+
+    The returned Arrivals struct will contain lists of `Train` structs going
+    `inbound` and `outbound` for the given line from the given station
+    (these two pieces of data are assumed to be already present in the struct.)
+
+    For details on a train struct, see the `Commuter.Train` module.
   """
-  def get_arrivals(%Arrivals{station_id: station, line_id: line} = struct) do
-    Tfl.call_station(station, line)
+  def run(%Arrivals{} = cache) do
+    check_time_elapsed(cache.timestamp)
+    |> return_arrivals(cache)
+  end
+
+  defp check_time_elapsed(cached_time) do
+    diff = Timex.diff(Timex.now, cached_time, :seconds)
+    cond do
+      diff < 60 ->
+        :use_cache
+      true ->
+        :use_fresh
+    end
+  end
+
+  defp return_arrivals(:use_cache, %Arrivals{} = cache), do: cache
+  defp return_arrivals(:use_fresh, %Arrivals{} = cache) do
+    attempt_tfl_call(cache)
+  end
+
+  defp attempt_tfl_call(%Arrivals{} = cache) do
+    response = Tfl.call_station(cache.station_id, cache.line_id)
+    case HTTPotion.Response.success?(response) do
+      false ->
+        cache
+      true ->
+        take_body(response) |> create_cache(cache)
+    end
+  end
+
+  defp take_body(%HTTPotion.Response{body: body}), do: body
+
+  defp create_cache(http_response_body, %Arrivals{} = cache) do
+    new_struct = %Arrivals{station_id: cache.station_id, line_id: cache.line_id}
+    http_response_body
     |> create_train_structs
-    |> update_arrivals_struct(struct)
+    |> build_arrivals_struct(new_struct)
   end
 
   defp create_train_structs(string) do
@@ -56,6 +97,7 @@ defmodule Commuter.Train.Arrivals do
     %Train{
       location: map["currentLocation"],
       arrival_time: Tfl.to_datetime(map["expectedArrival"]),
+      time_to_station: map["timeToStation"],
       destination: %{
         destination_name: map["destinationName"],
         destination_id: map["destinationNaptanId"]
@@ -65,9 +107,9 @@ defmodule Commuter.Train.Arrivals do
     }
   end
 
-  defp update_arrivals_struct(train_structs, arrivals_struct) do
+  defp build_arrivals_struct(train_structs, %Arrivals{} = empty_struct) do
     train_structs
-    |> Enum.reduce(arrivals_struct, &(into_direction(&1, &2)))
+    |> Enum.reduce(empty_struct, &(into_direction(&1, &2)))
     |> sort_by_distance
     |> insert_timestamp
   end
@@ -91,7 +133,7 @@ defmodule Commuter.Train.Arrivals do
     }
   end
 
-  def sort_chronologically(list) do
+  defp sort_chronologically(list) do
     Enum.sort(list, &by_arrival_time/2 )
   end
 
