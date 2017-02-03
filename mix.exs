@@ -14,7 +14,7 @@ defmodule Commuter.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :cowboy, :plug, :httpotion],
+    [applications: [:logger, :cowboy, :plug, :httpotion, :timex],
      mod: {Commuter, []}]
   end
 
@@ -32,7 +32,8 @@ defmodule Commuter.Mixfile do
       {:cowboy, "~>1.0"},
       {:plug, "~>1.3"},
       {:httpotion, "~> 3.0.2"},
-      {:poison, "~> 3.0"}
+      {:poison, "~> 3.0"},
+      {:timex, "~> 3.0"}
     ]
   end
 end
