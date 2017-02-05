@@ -1,36 +1,38 @@
-defmodule Commuter.Train.Arrivals do
-  defstruct [
-    :station_id,
-    :line_id,
-    timestamp: Timex.zero,
-    inbound: [],
-    outbound: []
-  ]
-  alias Commuter.{Train,Tfl}
-  alias Commuter.Train.Arrivals
+defmodule Commuter.Station.Arrivals do
+  use GenServer
+
+  alias Commuter.{Station,Train,Tfl}
+  alias __MODULE__, as: Arrivals
+
+  defstruct [:station_id, :line_id, timestamp: Timex.zero,
+            inbound: [], outbound: []]
 
   @tooting "940GZZLUTBC"
   @line "northern"
 
-  def start(station_id \\ @tooting, line_id \\ @line) do
-    init = initialise(station_id, line_id)
-    Task.start_link(fn -> listen(init) end)
+  # Client API
+
+  def start_link(station_id \\ @tooting, line_id \\ @line) do
+    GenServer.start_link(__MODULE__, {station_id, line_id}, [])
   end
 
-  def initialise(station_id \\ @tooting, line_id \\ @line) do
-    %Arrivals{station_id: station_id, line_id: line_id}
-    |> run
+  def get_arrivals(pid) do
+    GenServer.call(pid, :get)
   end
 
-  def listen(%Arrivals{} = cache) do
-    receive do
-      {:get, caller} ->
-        result = run(cache)
-        send caller, {:ok, result}
-        listen(result)
-    end
+  # Server callbacks
+
+  def init({station_id, line_id}) do
+    initial_state = %Arrivals{station_id: station_id, line_id: line_id} |> run
+    {:ok, initial_state}
   end
 
+  def handle_call(:get, _from, %Arrivals{} = state) do
+    result = run(state)
+    {:reply, result, result}
+  end
+
+  # Business Logic
 
   @doc """
     This code is executed when a request arrives to the process - the first
