@@ -12,17 +12,19 @@ defmodule Commuter.Station.Arrivals do
 
   # Client API
 
-  def start_link(station_id \\ @tooting, line_id \\ @line) do
-    GenServer.start_link(__MODULE__, {station_id, line_id}, [])
+  def start_link(station_id, line_id) do
+    GenServer.start_link(__MODULE__, {station_id, line_id}, name: __MODULE__)
   end
 
-  def get_arrivals(pid) do
-    GenServer.call(pid, :get)
+  def get_arrivals do
+    GenServer.call(__MODULE__, :get)
   end
 
   # Server callbacks
 
   def init({station_id, line_id}) do
+    IO.puts("the arrivals board is firing up with station #{inspect station_id}
+    and line #{inspect line_id}")
     initial_state = %Arrivals{station_id: station_id, line_id: line_id} |> run
     {:ok, initial_state}
   end
