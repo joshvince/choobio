@@ -6,42 +6,59 @@ defmodule Commuter.Tfl.Station do
 
   See docs for the other functions in this module for more details.
   """
+  use GenServer
 
   defstruct [:id, :name, :lines]
 
-  @tfl_json "lib/tfl/all_stations.json"
+  # Client API
 
-  # Public API
-
-  def find(id) do
-    id
+  def start_link do
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def all do
-    "all!"
+  def get_all_stations do
+    GenServer.call(__MODULE__, :get_all_stations)
   end
 
-  # Private functions for generating the data
-
-  def load_structs(tfl_json \\ @tfl_json) do
-    tfl_json
-    |> load
-    |> Poison.decode!
-    |> Enum.map( fn map -> to_struct(map) end )
+  def find_one_station(id) do
+    GenServer.call(__MODULE__, {:find_one_station, id})
   end
 
-  defp load(filepath) do
-    {:ok, contents} = File.read(filepath)
-    contents
+  def get_arrivals(station_id, line_id) do
+    GenServer.call(__MODULE__, {:get_arrivals, {station_id, line_id}})
   end
 
-  defp to_struct(map) do
-    %Commuter.Tfl.Station{id: map["naptanId"], name: map["stationName"], lines: []}
+  # Server callbacks
+
+  def init(:ok) do
+    initial_state = create_station_list
+    msg = "Initialised TFL Station list with #{inspect Enum.count(initial_state)} items"
+    IO.puts msg
+    {:ok, initial_state}
   end
 
-  #TODO: get the lines for each station...
+  def handle_call(:get_all_stations, _from, station_list) do
+    {:reply, station_list, station_list}
+  end
 
-  def get_all_stations(url \\ "https://api.tfl.gov.uk/StopPoint/Type/NaptanMetroStation") do
+  def handle_call({:find_one_station, id}, _from, station_list) do
+    result = find_station(id, station_list)
+    {:reply, result, station_list}
+  end
+
+  def handle_call({:get_arrivals, {station_id, line_id}}, _from, station_list) do
+    arrivals = line_arrivals(station_id, line_id)
+    {:reply, arrivals, station_list}
+  end
+
+  # Finding Stations
+
+  defp find_station(given_id, station_list) do
+    Enum.find(station_list, fn %Commuter.Tfl.Station{id: id} -> id == given_id end)
+  end
+
+  defp create_station_list(url \\ "https://api.tfl.gov.uk/StopPoint/Type/NaptanMetroStation") do
+    IO.puts "Calling TFL for the list of trains..."
     %HTTPotion.Response{body: body} =
       HTTPotion.get(url, [timeout: 20_000])
     body
@@ -70,6 +87,13 @@ defmodule Commuter.Tfl.Station do
 
   defp get_line_list(map) do
     map["lineIdentifier"]
+  end
+
+  # Getting Arrivals
+
+  defp line_arrivals(station_id, line_id) do
+    "https://api.tfl.gov.uk/Line/#{line_id}/Arrivals?stopPointId=#{station_id}"
+    |> HTTPotion.get
   end
 
 end

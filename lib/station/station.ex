@@ -13,6 +13,7 @@ defmodule Commuter.Station do
   # Client API
 
   def start_link(station_id, line_id) do
+    # pname = create_process_name(station_id, line_id)
     GenServer.start_link(__MODULE__, {station_id, line_id}, name: __MODULE__)
   end
 
@@ -23,6 +24,7 @@ defmodule Commuter.Station do
   # Server callbacks
 
   def init({station_id, line_id}) do
+    IO.puts "Station board is starting up for station #{station_id}"
     initial_state = %Station{station_id: station_id, line_id: line_id}
     {:ok, initial_state}
   end
@@ -30,6 +32,12 @@ defmodule Commuter.Station do
   def handle_call(:get_arrivals, _from, %Station{} = state) do
     result = get_arrivals(state)
     {:reply, result, result}
+  end
+
+  # Helper functions
+
+  defp create_process_name(station_id, line_id) do
+    "#{station_id}_#{line_id}" |> String.to_atom
   end
 
   # Business Logic
