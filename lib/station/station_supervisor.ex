@@ -5,7 +5,7 @@ defmodule Commuter.Station.StationSupervisor do
     line_id = "northern"
 
     children = [
-      worker(Commuter.Station.Arrivals, [station_id, line_id])
+      worker(Commuter.Station, [station_id, line_id])
     ]
 
     opts = [strategy: :one_for_one, name: StationSupervisor]
