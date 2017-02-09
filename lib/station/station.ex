@@ -13,12 +13,12 @@ defmodule Commuter.Station do
   # Client API
 
   def start_link(station_id, line_id) do
-    # pname = create_process_name(station_id, line_id)
-    GenServer.start_link(__MODULE__, {station_id, line_id}, name: __MODULE__)
+    pname = create_process_name(station_id, line_id)
+    GenServer.start_link(__MODULE__, {station_id, line_id}, name: pname)
   end
 
-  def get_arrivals do
-    GenServer.call(__MODULE__, :get_arrivals)
+  def get_arrivals(process_name) do
+    GenServer.call(process_name, :get_arrivals)
   end
 
   # Server callbacks
@@ -30,7 +30,7 @@ defmodule Commuter.Station do
   end
 
   def handle_call(:get_arrivals, _from, %Station{} = state) do
-    result = get_arrivals(state)
+    result = fetch_arrivals(state)
     {:reply, result, result}
   end
 
@@ -58,7 +58,7 @@ defmodule Commuter.Station do
 
     For details on a train struct, see the `Commuter.Train` module.
   """
-  defp get_arrivals(%Station{} = state) do
+  defp fetch_arrivals(%Station{} = state) do
     check_time_elapsed(state.timestamp)
     |> return_arrivals(state)
   end
