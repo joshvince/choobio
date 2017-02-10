@@ -1,4 +1,4 @@
-defmodule CommuterRouterTest do
+defmodule RouterTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
