@@ -12,11 +12,33 @@ defmodule Commuter.Station do
 
   # Client API
 
+  @doc """
+  Used to start a supervised process. Gives itself a name which is the result of
+  atomising `station_id` and `line_id` separated by an underscore.
+
+  ```
+  :"906ULZBLH_northern"
+  ```
+
+  Station ID and line ID are both passed to the `init` function.
+  """
   def start_link(station_id, line_id) do
     pname = create_process_name(station_id, line_id)
     GenServer.start_link(__MODULE__, {station_id, line_id}, name: pname)
   end
 
+  @doc """
+    Returns arrival lists of trains by fetching data from the TFL API.
+
+    Data is considered 'fresh' up to 60 seconds' lag. This is to avoid hammering
+    the TFL API. If the cached timestamp is less than 60 seconds ago, the cached
+    data will be returned.
+
+    Otherwise, new data is fetched from TFL, converted to lists of train structs
+    and sorted by time of arrival.
+
+    For details on a train struct, see the `Commuter.Train` module.
+  """
   def get_arrivals(process_name) do
     GenServer.call(process_name, :get_arrivals)
   end
@@ -24,7 +46,7 @@ defmodule Commuter.Station do
   # Server callbacks
 
   def init({station_id, line_id}) do
-    IO.puts "Station board is starting up for station #{station_id}"
+    IO.puts "Arrivals board is starting up for station #{station_id}"
     initial_state = %Station{station_id: station_id, line_id: line_id}
     {:ok, initial_state}
   end
@@ -42,22 +64,6 @@ defmodule Commuter.Station do
 
   # Business Logic
 
-  @doc """
-    This code is executed when a request arrives to the process - the first
-    step is to check how long has elapsed since the last response was cached
-    (the cache is passed to this function.) If it was made less than 60 seconds
-    ago, the cache will be returned unaltered.
-
-    If it was longer than 60 seconds ago, then this function calls TFL and
-    updates the cache struct based on the latest arrivals expected at the given
-    station and line.
-
-    The returned Station struct will contain lists of `Train` structs going
-    `inbound` and `outbound` for the given line from the given station
-    (these two pieces of data are assumed to be already present in the struct.)
-
-    For details on a train struct, see the `Commuter.Train` module.
-  """
   defp fetch_arrivals(%Station{} = state) do
     check_time_elapsed(state.timestamp)
     |> return_arrivals(state)
@@ -79,16 +85,14 @@ defmodule Commuter.Station do
   end
 
   defp attempt_tfl_call(%Station{} = cache) do
-    response = Tfl.call_station(cache.station_id, cache.line_id)
-    case HTTPotion.Response.success?(response) do
+    response = Tfl.line_arrivals(cache.station_id, cache.line_id)
+    case Tfl.successful_response?(response) do
       false ->
         cache
       true ->
-        take_body(response) |> create_cache(cache)
+        Tfl.take_body(response) |> create_cache(cache)
     end
   end
-
-  defp take_body(%HTTPotion.Response{body: body}), do: body
 
   defp create_cache(http_response_body, %Station{} = cache) do
     new_struct = %Station{station_id: cache.station_id, line_id: cache.line_id}
