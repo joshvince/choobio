@@ -1,24 +1,39 @@
 # CommuterService
 
-**TODO: Add description**
+**TODO: Proper Readme**
 
-## Installation
+## Setting up this Repo locally
+Getting this set up is as simple as a few commands, but you need Elixir installed
+on to your machine. The Elixir Docs have an [easy install guide](http://elixir-lang.org/install.html).
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+Once you've got that installed, just clone the directory and `cd` into it...  
 
-  1. Add `commuter_service` to your list of dependencies in `mix.exs`:
+Install dependencies with `mix deps.get`  
+Run tests with `mix test`  
+Start iex with `iex -S mix`  
 
-    ```elixir
-    def deps do
-      [{:commuter_service, "~> 0.1.0"}]
-    end
-    ```
+## Start the station supervisor
+Currently, the station supervisor needs to be started manually (this is TODO to fix)  
 
-  2. Ensure `commuter_service` is started before your application:
+To start:
+`Commuter.Station.StationSupervisor.start_link`  
 
-    ```elixir
-    def application do
-      [applications: [:commuter_service]]
-    end
-    ```
+You'll then create a GenServer process for each station/line combination.    
 
+Each process will be named after the station_id and the line_id, and because of
+the format of station id's specified by TFL, it will look like this:
+
+`:"90577GXBAL_northern"`
+
+## Get Arrivals for a specific station
+
+Currently, you need to manually enter a command to get the arrivals for a line
+at a station (this is, again, a TODO to fix.)  
+
+For now, you'll have to know the process ID of the station/line combination. It's
+quite easy to look this up: just take the station_id and the line_id and make it
+an atom (wrapped in quotes...)
+
+So, to call Tooting Bec's Northern Line arrivals:
+
+`Commuter.Station.get_arrivals(:"940GZZLUTBC_northern")`
