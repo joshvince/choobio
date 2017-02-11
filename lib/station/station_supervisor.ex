@@ -9,6 +9,10 @@ defmodule Commuter.Station.StationSupervisor do
     {:ok, _pid} = Supervisor.start_link(children, opts)
   end
 
+  def init(:ok) do
+    {:ok, []}
+  end
+
   defp create_all_workers(list_of_stations) do
     list_of_stations
     |> Enum.map( &(create_line_workers(&1)) )

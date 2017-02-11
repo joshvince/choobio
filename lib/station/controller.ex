@@ -2,29 +2,60 @@ defmodule Commuter.Station.Controller do
   @moduledoc """
   Handles client requests for station data.
   """
-  alias Commuter.Train
 
-  def return_arrivals(station_id, line_id, direction) do
-    direction_atom = atomize_params(direction)
+  @doc """
+  Fetches the station, line and direction params from the connection and tries
+  to call the corresponding process to retrieve arrivals data.
 
-    atomize_params({station_id, line_id})
-    |> Commuter.Station.get_arrivals
-    |> take_direction(direction_atom)
-    |> Poison.encode!
+  Sends a response back to the client.
+  """
+  def get_arrivals(%Plug.Conn{} = conn) do
+    conn
+    |> assign_arrival_params
+    |> lookup_process
   end
 
+  defp assign_arrival_params(%Plug.Conn{path_params: p} = conn) do
+    conn
+    |> Plug.Conn.assign(:pid, atomize_params({p["station_id"], p["line_id"]}))
+    |> Plug.Conn.assign(:direction, atomize_params(p["direction"]))
+  end
+
+  # atomize the params
   defp atomize_params({first, second}) do
     "#{first}_#{second}" |> String.to_atom
   end
   defp atomize_params(one_string), do: String.to_atom(one_string)
 
-  defp take_direction(%Commuter.Station{} = station, direction) do
+  defp lookup_process(%Plug.Conn{assigns: assigns} = conn) do
+    process_list = Process.registered
+    case Enum.member?(process_list, assigns.pid) do
+      false ->
+        Plug.Conn.resp(conn, 404, "NOT FOUND")
+      true ->
+        call_process(conn)
+    end
+  end
+
+  defp call_process(%Plug.Conn{assigns: assigns} = conn) do
+    assigns.pid
+    |> Commuter.Station.get_arrivals
+    |> take_direction_list(assigns.direction)
+    |> Poison.encode!
+    |> send_response(200, conn)
+  end
+
+  defp take_direction_list(%Commuter.Station{} = station, direction) do
     Map.get(station, direction)
   end
 
-  defp only_distance_in_seconds(list_of_trains) do
-    list_of_trains
-    |> Enum.map(fn %Train{time_to_station: time} -> "#{time} secs" end)
+  defp send_response(response_body, code, conn) do
+    Plug.Conn.resp(conn, code, response_body)
   end
+
+  # defp only_distance_in_seconds(list_of_trains) do
+  #   list_of_trains
+  #   |> Enum.map(fn %Train{time_to_station: time} -> "#{time} secs" end)
+  # end
 
 end

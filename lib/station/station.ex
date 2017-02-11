@@ -1,14 +1,13 @@
 defmodule Commuter.Station do
   use GenServer
 
-  alias Commuter.{Train,Tfl}
+  alias Commuter.{Train}
   alias __MODULE__, as: Station
 
   defstruct [:station_id, :line_id, timestamp: Timex.zero,
             inbound: [], outbound: []]
 
-  @tooting "940GZZLUTBC"
-  @line "northern"
+  @tfl_api Application.get_env(:commuter, :tfl_api)
 
   # Client API
 
@@ -85,12 +84,12 @@ defmodule Commuter.Station do
   end
 
   defp attempt_tfl_call(%Station{} = cache) do
-    response = Tfl.line_arrivals(cache.station_id, cache.line_id)
-    case Tfl.successful_response?(response) do
+    response = @tfl_api.line_arrivals(cache.station_id, cache.line_id)
+    case @tfl_api.successful_response?(response) do
       false ->
         cache
       true ->
-        Tfl.take_body(response) |> create_cache(cache)
+        @tfl_api.take_body(response) |> create_cache(cache)
     end
   end
 
@@ -110,7 +109,7 @@ defmodule Commuter.Station do
   defp to_train_struct(map) do
     %Train{
       location: map["currentLocation"],
-      arrival_time: Tfl.to_datetime(map["expectedArrival"]),
+      arrival_time: @tfl_api.to_datetime(map["expectedArrival"]),
       time_to_station: map["timeToStation"],
       destination: %{
         destination_name: map["destinationName"],

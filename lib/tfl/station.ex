@@ -8,7 +8,7 @@ defmodule Commuter.Tfl.Station do
   """
   use GenServer
 
-  alias Commuter.Tfl
+  @tfl_api Application.get_env(:commuter, :tfl_api)
 
   defstruct [:id, :name, :lines]
 
@@ -50,14 +50,14 @@ defmodule Commuter.Tfl.Station do
   end
 
   def handle_call({:get_arrivals, {station_id, line_id}}, _from, station_list) do
-    arrivals = Tfl.line_arrivals(station_id, line_id)
+    arrivals = @tfl_api.line_arrivals(station_id, line_id)
     {:reply, arrivals, station_list}
   end
 
   # Application set up
 
   defp create_station_list do
-    Tfl.retrieve_all_stations
+    @tfl_api.retrieve_all_stations
     |> Enum.filter( &(is_tube_station?(&1)) )
     |> Enum.map( &(convert_to_struct(&1)) )
   end
@@ -67,16 +67,6 @@ defmodule Commuter.Tfl.Station do
   defp find_station(given_id, station_list) do
     Enum.find(station_list, fn %Commuter.Tfl.Station{id: id} -> id == given_id end)
   end
-
-  # defp create_station_list(url \\ ) do
-  #   IO.puts "Calling TFL for the list of trains..."
-  #   %HTTPotion.Response{body: body} =
-  #     HTTPotion.get(url, [timeout: 50_000])
-  #   body
-  #   |> Poison.decode!
-  #   |> Enum.filter( &(is_tube_station?(&1)) )
-  #   |> Enum.map( &(convert_to_struct(&1)) )
-  # end
 
   defp is_tube_station?(map) do
     modes = map["modes"]
