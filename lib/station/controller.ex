@@ -2,7 +2,6 @@ defmodule Commuter.Station.Controller do
   @moduledoc """
   Handles client requests for station data.
   """
-  alias Commuter.Train
 
   @doc """
   Fetches the station, line and direction params from the connection and tries

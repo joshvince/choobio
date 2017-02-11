@@ -54,7 +54,7 @@ defmodule Commuter.Tfl do
     IO.puts "Calling TFL for the list of stations..."
     HTTPotion.get(url, [timeout: 20_000])
     |> handle_response
-    |> Poison.decode!([])
+    |> Poison.decode!
   end
 
   # I am not letting this crash like I should, because this call MUST
