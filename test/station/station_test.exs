@@ -2,10 +2,6 @@ defmodule Commuter.Station.StationTest do
   use ExUnit.Case, async: true
   alias Commuter.Station
 
-  @tooting "940GZZLUTBC"
-  @northern "northern"
-  @direction "inbound"
-
   @process_id :"940GZZLUTBC_northern"
 
   test "returns a struct with two lists of trains" do

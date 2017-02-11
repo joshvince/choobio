@@ -11,7 +11,10 @@ defmodule Commuter.Tfl.Mock do
   """
   def successful_response?(_response), do: true
 
-  def take_body(map), do: map.body
+  @doc """
+  This doesn't do anything. Just a smoke screen.
+  """
+  def take_body(list), do: list
 
   @doc """
   Returns four stations:
@@ -19,6 +22,8 @@ defmodule Commuter.Tfl.Mock do
   - Waterloo
   - Tooting Bec
   - Victoria
+
+  Returns a list of objects.
   """
   def retrieve_all_stations(_url \\ "fake") do
     IO.puts "Using Mock TFL to get station list..."
@@ -58,6 +63,9 @@ defmodule Commuter.Tfl.Mock do
     ]
   end
 
+  @doc """
+  Returns a JSON string full of train objects as if it was from TFL.
+  """
   def line_arrivals("940GZZLUTBC", "northern") do
     [%{"$type" => "Tfl.Api.Presentation.Entities.Prediction, Tfl.Api.Presentation.Entities",
       "bearing" => "", "currentLocation" => "Between Moorgate and Bank",
@@ -129,8 +137,12 @@ defmodule Commuter.Tfl.Mock do
       "received" => "0001-01-01T00:00:00", "sent" => "2017-02-11T09:12:03Z",
       "source" => "0001-01-01T00:00:00"}, "towards" => "Edgware via Bank",
       "vehicleId" => "212"}]
+      |> Poison.encode!
   end
 
+  @doc """
+  Converts timestamp strings to DateTime objects.
+  """
   def to_datetime(timestamp) do
     timestamp
     |> remove_ms

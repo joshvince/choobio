@@ -24,10 +24,7 @@ defmodule Commuter.Router do
   end
 
   get "/stations/:station_id/:line_id/:direction" do
-    arrivals =
-      Commuter.Station.Controller.return_arrivals(station_id, line_id, direction)
-    conn
-    |> send_resp(200, arrivals)
+    Controller.get_arrivals(conn)
   end
 
   match _ do
