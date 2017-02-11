@@ -49,6 +49,7 @@ defmodule Commuter.Tfl do
   in order for the app to start up) there is a checker function that retries
   an unsuccessful call.
   """
+  @callback retrieve_all_stations(url :: String.t) :: [%{}]
   def retrieve_all_stations(url \\ @tfl_all_stations) do
     IO.puts "Calling TFL for the list of stations..."
     HTTPotion.get(url, [timeout: 20_000])
@@ -58,7 +59,7 @@ defmodule Commuter.Tfl do
 
   # I am not letting this crash like I should, because this call MUST
   # succeed for the appliation server to start.
-  defp handle_response(%HTTPotion.ErrorResponse{} = res) do
+  defp handle_response(%HTTPotion.ErrorResponse{}) do
     IO.puts("The call failed!")
     retrieve_all_stations
   end
@@ -69,6 +70,7 @@ defmodule Commuter.Tfl do
   @doc """
   TODO: doc this up!
   """
+  @callback line_arrivals(station_id :: String.t, line_id :: String.t) :: String.t
   def line_arrivals(station_id, line_id) do
     "https://api.tfl.gov.uk/Line/#{line_id}/Arrivals?stopPointId=#{station_id}"
     |> call_tfl
@@ -76,8 +78,10 @@ defmodule Commuter.Tfl do
 
   # Parsing Functions
 
-  # This is a really hacky way to get around the fact that (seemingly) timestamps
-
+  @doc """
+  Converts timestamp strings to `DateTime` structs, removing milliseconds.
+  """
+  @callback to_datetime(timestamp :: String.t) :: %DateTime{}
   def to_datetime(timestamp) do
     timestamp
     |> remove_ms
@@ -89,7 +93,7 @@ defmodule Commuter.Tfl do
     case String.split(timestamp, ".") do
       [time, _ms] ->
         time
-      [time] ->
+      [_time] ->
         timestamp
     end
   end
