@@ -8,7 +8,7 @@ defmodule Commuter.Tfl do
   use Timex
 
   @tfl_all_stations "https://api.tfl.gov.uk/StopPoint/Type/NaptanMetroStation"
-
+  @vsn "0"
   # Various helper functions for calling TFL and handling responses.
 
   @doc """

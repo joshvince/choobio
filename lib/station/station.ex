@@ -8,6 +8,7 @@ defmodule Commuter.Station do
             inbound: [], outbound: []]
 
   @tfl_api Application.get_env(:commuter, :tfl_api)
+  @vsn "0"
 
   # Client API
 
