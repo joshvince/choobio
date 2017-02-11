@@ -1,10 +1,12 @@
-# CommuterService
+# Choob
+Choob is a service that provides a little extra information about the London Underground.  
 
-**TODO: Proper Readme**
+This repo covers the backend service, the client-side app is written in React and is accessible [here](https://github.com/joshvince/commuter-web)
 
 ## Setting up this Repo locally
 Getting this set up is as simple as a few commands, but you need Elixir installed
-on to your machine. The Elixir Docs have an [easy install guide](http://elixir-lang.org/install.html).
+on to your machine. The Elixir Docs have an
+[easy install guide](http://elixir-lang.org/install.html).
 
 Once you've got that installed, just clone the directory and `cd` into it...  
 
@@ -12,28 +14,42 @@ Install dependencies with `mix deps.get`
 Run tests with `mix test`  
 Start iex with `iex -S mix`  
 
-## Start the station supervisor
-Currently, the station supervisor needs to be started manually (this is TODO to fix)  
+## What happens on startup?
+When this application is started, two supervisors are spun up:  
 
-To start:
-`Commuter.Station.StationSupervisor.start_link`  
+### TFL Supervisor
+This supervisor currently gets station data from the TFL api.  
+On startup, it will get a list of all tube stations and store it to memory.  
+Then, this is used to make API calls to TFL.  
 
-You'll then create a GenServer process for each station/line combination.    
+*Note: In the `test` env, `Commuter.Tfl.Mock` - a Mock version of the TFL API -
+is used. Mix handles this distinction for you.*  
 
-Each process will be named after the station_id and the line_id, and because of
-the format of station id's specified by TFL, it will look like this:
+### Station Supervisor
+This supervisor will take the list of tube stations grabbed from TFL, and will
+spawn and monitor a process for each combination of station/line. These processes
+are then available for you to access via endpoints, explained below.  
 
-`:"90577GXBAL_northern"`
+Because OTP and Elixir are awesome, you don't have to worry about any of these
+crashing, as they will be automatically restarted :)
 
-## Get Arrivals for a specific station
+## API
+### Arrivals
 
-Currently, you need to manually enter a command to get the arrivals for a line
-at a station (this is, again, a TODO to fix.)  
+**GET** `/stations/:station_id/:line_id/:direction`  
+Returns a JSON list of arrivals at the specified station, on the given line, for
+the given direction.  
 
-For now, you'll have to know the process ID of the station/line combination. It's
-quite easy to look this up: just take the station_id and the line_id and make it
-an atom (wrapped in quotes...)
+*Options:*
+- `station_id` must be a valid `NaptanId` assigned to a TFL stopPoint that is served
+by at least one `tube` line.
+- `line_id` must be a valid tube id used by TFL. If in doubt, this is a
+lowercase string with spaces replaced by dashes, like `northern` or `waterloo-city`
+- `direction` is either `"inbound"` or `"outbound"`  
 
-So, to call Tooting Bec's Northern Line arrivals:
-
-`Commuter.Station.get_arrivals(:"940GZZLUTBC_northern")`
+*Examples:*   
+ 
+`/stations/940GZZLUTBC/northern/inbound` will return a list of Northern Line
+trains travelling Southbound from Tooting Bec Station.  
+`/stations/940GZZLUWLO/jubilee/outbound` will return a list of Jubilee Line
+trains travelling Eastbound from Waterloo Station.
