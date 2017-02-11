@@ -8,6 +8,8 @@ defmodule Commuter.Tfl.Station do
   """
   use GenServer
 
+  alias Commuter.Tfl
+
   defstruct [:id, :name, :lines]
 
   # Client API
@@ -32,7 +34,8 @@ defmodule Commuter.Tfl.Station do
 
   def init(:ok) do
     initial_state = create_station_list
-    msg = "Initialised TFL Station list with #{inspect Enum.count(initial_state)} items"
+    msg =
+      "Initialised TFL Station list with #{inspect Enum.count(initial_state)} items"
     IO.puts msg
     {:ok, initial_state}
   end
@@ -47,8 +50,16 @@ defmodule Commuter.Tfl.Station do
   end
 
   def handle_call({:get_arrivals, {station_id, line_id}}, _from, station_list) do
-    arrivals = line_arrivals(station_id, line_id)
+    arrivals = Tfl.line_arrivals(station_id, line_id)
     {:reply, arrivals, station_list}
+  end
+
+  # Application set up
+
+  defp create_station_list do
+    Tfl.retrieve_all_stations
+    |> Enum.filter( &(is_tube_station?(&1)) )
+    |> Enum.map( &(convert_to_struct(&1)) )
   end
 
   # Finding Stations
@@ -57,15 +68,15 @@ defmodule Commuter.Tfl.Station do
     Enum.find(station_list, fn %Commuter.Tfl.Station{id: id} -> id == given_id end)
   end
 
-  defp create_station_list(url \\ "https://api.tfl.gov.uk/StopPoint/Type/NaptanMetroStation") do
-    IO.puts "Calling TFL for the list of trains..."
-    %HTTPotion.Response{body: body} =
-      HTTPotion.get(url, [timeout: 20_000])
-    body
-    |> Poison.decode!
-    |> Enum.filter( &(is_tube_station?(&1)) )
-    |> Enum.map( &(convert_to_struct(&1)) )
-  end
+  # defp create_station_list(url \\ ) do
+  #   IO.puts "Calling TFL for the list of trains..."
+  #   %HTTPotion.Response{body: body} =
+  #     HTTPotion.get(url, [timeout: 50_000])
+  #   body
+  #   |> Poison.decode!
+  #   |> Enum.filter( &(is_tube_station?(&1)) )
+  #   |> Enum.map( &(convert_to_struct(&1)) )
+  # end
 
   defp is_tube_station?(map) do
     modes = map["modes"]
@@ -87,13 +98,6 @@ defmodule Commuter.Tfl.Station do
 
   defp get_line_list(map) do
     map["lineIdentifier"]
-  end
-
-  # Getting Arrivals
-
-  defp line_arrivals(station_id, line_id) do
-    "https://api.tfl.gov.uk/Line/#{line_id}/Arrivals?stopPointId=#{station_id}"
-    |> HTTPotion.get
   end
 
 end
