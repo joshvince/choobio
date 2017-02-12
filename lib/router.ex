@@ -10,12 +10,13 @@ defmodule Commuter.Router do
   plug :dispatch
 
   def start_link do
-    {:ok, _} = Plug.Adapters.Cowboy.http(Commuter.Router, [], Application.get_env(:port))
+    {:ok, _} = Plug.Adapters.Cowboy.http(Commuter.Router, [],
+                [port: String.to_integer(System.get_env("PORT"))]
+              )
   end
 
   def init(opts) do
     IO.puts "SYS PORT was #{inspect System.get_env("PORT")}"
-    IO.puts "Plug was passed Port #{Application.get_env(:port)}"
     opts
   end
 

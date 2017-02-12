@@ -54,16 +54,29 @@ defmodule Commuter.Tfl do
     IO.puts "Calling TFL for the list of stations..."
     HTTPotion.get(url, [timeout: 50_000])
     |> handle_response
-    |> Poison.decode!
+    |> try_decode
   end
 
   # I am not letting this crash like I should, because this call MUST
   # succeed for the appliation server to start.
-  defp handle_response(%HTTPotion.ErrorResponse{}) do
-    IO.puts("The call failed!")
-    retrieve_all_stations
+  defp handle_response(%HTTPotion.Response{body: body}) do
+    body
   end
-  defp handle_response(successful_response), do: take_body(successful_response)
+  defp handle_response(_anything_else), do: retrieve_all_stations()
+
+  defp try_decode(resp) do
+    case Poison.decode(resp) do
+      {:ok, list} ->
+        list
+      true ->
+        retrieve_all_stations()
+    end
+  end
+  # defp handle_response(%HTTPotion.ErrorResponse{}) do
+  #   IO.puts("The call failed!")
+  #   retrieve_all_stations
+  # end
+  # defp handle_response(successful_response), do: take_body(successful_response)
 
   # Arrival Data
 
