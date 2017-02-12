@@ -52,7 +52,7 @@ defmodule Commuter.Tfl do
   @callback retrieve_all_stations(url :: String.t) :: [%{}]
   def retrieve_all_stations(url \\ @tfl_all_stations) do
     IO.puts "Calling TFL for the list of stations..."
-    HTTPotion.get(url, [timeout: 20_000])
+    HTTPotion.get(url, [timeout: 50_000])
     |> handle_response
     |> Poison.decode!
   end
