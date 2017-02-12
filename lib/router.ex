@@ -14,6 +14,7 @@ defmodule Commuter.Router do
   end
 
   def init(opts) do
+    IO.puts "PORT was #{inspect System.get_env("PORT")}"
     opts
   end
 
