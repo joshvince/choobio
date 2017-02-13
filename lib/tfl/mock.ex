@@ -63,6 +63,9 @@ defmodule Commuter.Tfl.Mock do
     ]
   end
 
+  # fake one to avoid having to mention specifics in tests...
+  def line_arrivals(:test), do: line_arrivals("940GZZLUTBC", "northern")
+
   @doc """
   Returns a JSON string full of train objects as if it was from TFL.
   """
