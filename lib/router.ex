@@ -11,14 +11,16 @@ defmodule Commuter.Router do
 
   def start_link do
     {:ok, _} = Plug.Adapters.Cowboy.http(Commuter.Router, [],
-                [port: String.to_integer(System.get_env("PORT"))]
-              )
+                [port: port(System.get_env("PORT"))])
   end
 
   def init(opts) do
     IO.puts "SYS PORT was #{inspect System.get_env("PORT")}"
     opts
   end
+
+  defp port(nil), do: 4000
+  defp port(port_string), do: String.to_integer(port_string)
 
   get "/" do
     conn
