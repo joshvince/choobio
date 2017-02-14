@@ -36,4 +36,10 @@ defmodule Commuter.Station.ArrivalsTest do
     assert arrival_times == sorted_arrival_times
   end
 
+  test "calculates correctly", %{trains: trains} do
+    arr = Arrivals.build_arrivals(trains)
+    res = Arrivals.build_one_calculated_list(arr.inbound.raw)
+    IO.inspect res
+  end
+
 end

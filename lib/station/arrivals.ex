@@ -18,7 +18,7 @@ defmodule Commuter.Station.Arrivals do
   def build_arrivals(train_structs) do
     %Arrivals{}
     |> build_raw(train_structs)
-
+    # |> build_calculated
   end
 
   defp build_raw(%Arrivals{} = arrivals, train_structs) do
@@ -55,6 +55,52 @@ defmodule Commuter.Station.Arrivals do
   defp by_arrival_time(struct1, struct2) do
     Timex.before?(struct1.arrival_time, struct2.arrival_time)
   end
+
+  def build_one_calculated_list(list_of_trains) do
+    list_of_trains
+    |> with_intervals
+    |> ignore_next_train
+    |> take_top_three
+  end
+
+  defp with_intervals(list_of_trains) do
+    list_of_trains
+    |> get_interval
+    |> Enum.reverse
+  end
+
+  defp get_interval([first | rest]) do
+    init = [{first.time_to_station, first}]
+    Enum.reduce(rest, init, &get_interval(&1, &2))
+  end
+
+  defp get_interval(current, [{distance, _struct} | _rest] = acc) do
+    interval = (current.time_to_station - distance)
+    [{interval, current} | acc]
+  end
+
+  # TODO: this and below... It's not working right now.
+
+  # Because we don't know how soon after the last train the next train is,
+  # We ignore it - unless there's only one train in total.
+  defp ignore_next_train([next_train | rest]), do: rest
+  defp ignore_next_train([only_one_train | []]), do:  only_one_train
+
+  defp take_top_three([first | rest]) do
+    rest
+    |> sort_by_shortest_interval
+    |> Enum.slice(0,3)
+  end
+
+  defp sort_by_shortest_interval(list_of_tuples) when is_list(list_of_tuples) do
+    list_of_tuples
+    |> Enum.sort(fn {i1, map1}, {i2, map2} -> i1 < i2 end)
+  end
+
+  defp sort_by_shortest_interval(tuple), do: [tuple]
+
+
+
 
 
 
