@@ -24,7 +24,8 @@ defmodule Commuter.Station.Arrivals do
   defp build_raw(%Arrivals{} = arrivals, train_structs) do
     arrivals
     |> put_into_direction_list(train_structs)
-    |> sort_by_distance
+    |> sort_train_lists
+    # |> sort_by_distance
   end
 
   defp put_into_direction_list(%Arrivals{} = arrivals, train_structs) do
@@ -48,6 +49,16 @@ defmodule Commuter.Station.Arrivals do
                 outbound: %{raw: outb, calculated: []}}
   end
 
+  defp sort_train_lists(%Arrivals{inbound: inb_map, outbound: outb_map} = struct) do
+
+  end
+
+  defp sort_chronologically_with_interval(list) do
+    list
+    |> sort_chronologically
+    |> insert_intervals
+  end
+
   defp sort_chronologically(list) do
     Enum.sort(list, &by_arrival_time/2 )
   end
@@ -55,6 +66,39 @@ defmodule Commuter.Station.Arrivals do
   defp by_arrival_time(struct1, struct2) do
     Timex.before?(struct1.arrival_time, struct2.arrival_time)
   end
+
+  ## psuedo:
+  # take in a list of train structs.
+  # For each of them, take in the previous train's time to the station, and the
+  # current train struct.
+  # Work out the difference between the previous train and the current train's time
+  # to station. Insert that into the train struct, add the struct to the accumulator
+  # and then return the accumulator.
+
+
+  def insert_intervals(list) do
+    insert_intervals(0, list)
+  end
+
+  defp insert_intervals(prev, [last | []]) do
+    calculate_interval(prev, last)
+  end
+
+  defp insert_intervals(prev, [current | tail]) do
+    res = calculate_interval(prev, current)
+    [res | insert_intervals(res.time_to_station, tail)]
+  end
+
+  defp calculate_interval(prev, %Train{time_to_station: t} = struct) do
+    diff = t - prev
+    %{struct | interval: diff}
+    # Map.put(map, :diff, diff)
+  end
+
+  # OLD NEW STUFF....
+
+
+
 
   def build_one_calculated_list(list_of_trains) do
     list_of_trains
@@ -98,7 +142,6 @@ defmodule Commuter.Station.Arrivals do
   end
 
   defp sort_by_shortest_interval(tuple), do: [tuple]
-
 
 
 
