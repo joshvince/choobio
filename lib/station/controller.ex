@@ -46,7 +46,7 @@ defmodule Commuter.Station.Controller do
   end
 
   defp take_direction_list(%Commuter.Station{} = station, direction) do
-    Map.get(station, direction)
+    Map.get(station.arrivals, direction)
   end
 
   defp send_response(response_body, code, conn) do

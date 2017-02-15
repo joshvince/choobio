@@ -4,26 +4,10 @@ defmodule Commuter.Station.StationTest do
 
   @process_id :"940GZZLUTBC_northern"
 
-  test "returns a struct with two lists of trains" do
+  test "returns a struct containing an arrivals struct" do
     result = Station.get_arrivals(@process_id)
-    %Station{inbound: inbound_list, outbound: outbound_list} = result
-    assert is_list(inbound_list) && is_list(outbound_list)
-  end
-
-  test "Station structs should only contain Train structs in the train lists" do
-    result = Station.get_arrivals(@process_id)
-    Enum.each(result.inbound, fn struct ->
-      assert struct.__struct__ == Commuter.Train end)
-    Enum.each(result.outbound, fn struct ->
-      assert struct.__struct__ == Commuter.Train end)
-  end
-
-  test "the trains are all assigned to the correct direction's list" do
-    result = Station.get_arrivals(@process_id)
-    Enum.each(result.inbound, fn %Commuter.Train{direction: direction} ->
-      assert direction == "inbound" end)
-    Enum.each(result.outbound, fn %Commuter.Train{direction: direction} ->
-      assert direction == "outbound" end)
+    %Station{arrivals: arrivals} = result
+    assert arrivals.__struct__ == Commuter.Station.Arrivals
   end
 
 end

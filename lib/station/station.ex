@@ -5,8 +5,7 @@ defmodule Commuter.Station do
   alias Commuter.Station.Arrivals
   alias __MODULE__, as: Station
 
-  defstruct [:station_id, :line_id, timestamp: Timex.zero,
-            inbound: [], outbound: []]
+  defstruct [:station_id, :line_id, :arrivals, timestamp: Timex.zero]
 
   @tfl_api Application.get_env(:commuter, :tfl_api)
   @vsn "0"
@@ -16,11 +15,9 @@ defmodule Commuter.Station do
   @doc """
   Used to start a supervised process. Gives itself a name which is the result of
   atomising `station_id` and `line_id` separated by an underscore.
-
   ```
   :"906ULZBLH_northern"
   ```
-
   Station ID and line ID are both passed to the `init` function.
   """
   def start_link(station_id, line_id) do
@@ -95,11 +92,23 @@ defmodule Commuter.Station do
     end
   end
 
+  # defp create_cache(http_response_body, %Station{} = cache) do
+  #   new_struct = %Station{station_id: cache.station_id, line_id: cache.line_id}
+  #   http_response_body
+  #   |> Train.create_train_structs
+  #   |> Arrivals.build_arrivals_struct(new_struct)
+  # end
+
   defp create_cache(http_response_body, %Station{} = cache) do
-    new_struct = %Station{station_id: cache.station_id, line_id: cache.line_id}
     http_response_body
     |> Train.create_train_structs
-    |> Arrivals.build_arrivals_struct(new_struct)
+    |> Arrivals.build_arrivals
+    |> add_to_struct(cache)
+  end
+
+
+  defp add_to_struct(%Arrivals{} = updated_arrivals, %Station{} = cache) do
+    %{cache | arrivals: updated_arrivals}
   end
 
 end
