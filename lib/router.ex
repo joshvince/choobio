@@ -28,6 +28,12 @@ defmodule Commuter.Router do
     |> halt
   end
 
+  get "/stations" do
+    conn
+    |> Controller.get_all_stations
+    # send back a list of all the stations currently active.
+  end
+
   get "/stations/:station_id/:line_id/:direction" do
     Controller.get_arrivals(conn)
   end

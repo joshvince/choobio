@@ -6,25 +6,31 @@ defmodule Commuter.Station.ControllerTest do
   @opts Commuter.Router.init([])
 
   setup do
-    bad_resp =
+    bad_arrivals_resp =
       conn(:get, "/stations/940GZZFAKE/northern/outbound")
       |> Commuter.Router.call(@opts)
       |> Controller.get_arrivals
-    good_resp =
+    good_arrivals_resp =
       conn(:get, "stations/940GZZLUTBC/northern/outbound")
       |> Commuter.Router.call(@opts)
       |> Controller.get_arrivals
-    %{responses: %{bad_resp: bad_resp, good_resp: good_resp}}
+    stations_resp =
+      conn(:get, "/stations")
+      |> Commuter.Router.call(@opts)
+      |> Controller.get_all_stations
+    %{responses: %{ bad_arrivals_resp: bad_arrivals_resp,
+                    good_arrivals_resp: good_arrivals_resp},
+                    stations_resp: stations_resp}
   end
 
   test "returns 404 if there was not a running station process",
-  %{responses: %{bad_resp: resp}} do
+  %{responses: %{bad_arrivals_resp: resp}} do
     assert resp.status == 404
     assert resp.resp_body == "NOT FOUND"
   end
 
   test "returns 200 and json if there was a running station process",
-  %{responses: %{good_resp: resp}} do
+  %{responses: %{good_arrivals_resp: resp}} do
     assert resp.status == 200
     assert is_binary(resp.resp_body)
   end
@@ -37,7 +43,12 @@ defmodule Commuter.Station.ControllerTest do
     Enum.each(assigns, fn {_k,v} -> assert is_atom(v) end)
   end
 
-  test "a good request returns a string of json objects", %{responses: %{good_resp: resp}} do
+  test "a good request returns a string of json objects", %{responses: %{good_arrivals_resp: resp}} do
+    {code, _maps} = Poison.decode(resp.resp_body)
+    assert code == :ok
+  end
+
+  test "the /stations endpoint returns a list of json objects", %{stations_resp: resp} do
     {code, _maps} = Poison.decode(resp.resp_body)
     assert code == :ok
   end

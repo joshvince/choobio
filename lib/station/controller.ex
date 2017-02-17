@@ -4,6 +4,16 @@ defmodule Commuter.Station.Controller do
   """
 
   @doc """
+  Handles a request for a list of all stations served by the app and the lines
+  for each. Sends JSON array of objects back to the client.
+  """
+  def get_all_stations(%Plug.Conn{} = conn) do
+    Commuter.Tfl.Station.get_all_stations
+    |> Poison.encode!
+    |> send_response(200, conn)
+  end
+
+  @doc """
   Fetches the station, line and direction params from the connection and tries
   to call the corresponding process to retrieve arrivals data.
 
