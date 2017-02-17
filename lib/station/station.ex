@@ -1,11 +1,11 @@
 defmodule Commuter.Station do
   use GenServer
 
-  alias Commuter.{Train}
+  alias Commuter.Train
+  alias Commuter.Station.Arrivals
   alias __MODULE__, as: Station
 
-  defstruct [:station_id, :line_id, timestamp: Timex.zero,
-            inbound: [], outbound: []]
+  defstruct [:station_id, :line_id, :arrivals, timestamp: Timex.zero]
 
   @tfl_api Application.get_env(:commuter, :tfl_api)
   @vsn "0"
@@ -15,11 +15,9 @@ defmodule Commuter.Station do
   @doc """
   Used to start a supervised process. Gives itself a name which is the result of
   atomising `station_id` and `line_id` separated by an underscore.
-
   ```
   :"906ULZBLH_northern"
   ```
-
   Station ID and line ID are both passed to the `init` function.
   """
   def start_link(station_id, line_id) do
@@ -94,69 +92,23 @@ defmodule Commuter.Station do
     end
   end
 
+  # defp create_cache(http_response_body, %Station{} = cache) do
+  #   new_struct = %Station{station_id: cache.station_id, line_id: cache.line_id}
+  #   http_response_body
+  #   |> Train.create_train_structs
+  #   |> Arrivals.build_arrivals_struct(new_struct)
+  # end
+
   defp create_cache(http_response_body, %Station{} = cache) do
-    new_struct = %Station{station_id: cache.station_id, line_id: cache.line_id}
     http_response_body
-    |> create_train_structs
-    |> build_arrivals_struct(new_struct)
+    |> Train.create_train_structs
+    |> Arrivals.build_arrivals
+    |> add_to_struct(cache)
   end
 
-  defp create_train_structs(string) do
-    string
-    |> Poison.decode!
-    |> Enum.map( &(to_train_struct(&1)) )
-  end
 
-  defp to_train_struct(map) do
-    %Train{
-      location: map["currentLocation"],
-      arrival_time: @tfl_api.to_datetime(map["expectedArrival"]),
-      time_to_station: map["timeToStation"],
-      destination: %{
-        destination_name: map["destinationName"],
-        destination_id: map["destinationNaptanId"]
-      },
-      train_id: map["vehicleId"],
-      direction: map["direction"]
-    }
-  end
-
-  defp build_arrivals_struct(train_structs, %Station{} = empty_struct) do
-    train_structs
-    |> Enum.reduce(empty_struct, &(into_direction(&1, &2)))
-    |> sort_by_distance
-    |> insert_timestamp
-  end
-
-  defp into_direction(%Train{direction: "inbound"} = map, %Station{inbound: current} = acc) do
-    new_list = [map | current]
-    %{acc | inbound: new_list}
-  end
-
-  defp into_direction(%Train{direction: "outbound"} = map, %Station{outbound: current} = acc) do
-    new_list = [map | current]
-    %{acc | outbound: new_list}
-  end
-
-  defp into_direction(_another_map, acc), do: acc
-
-  defp sort_by_distance(%Station{inbound: inb, outbound: outb} = map) do
-    %{ map |
-    inbound: sort_chronologically(inb),
-    outbound: sort_chronologically(outb)
-    }
-  end
-
-  defp sort_chronologically(list) do
-    Enum.sort(list, &by_arrival_time/2 )
-  end
-
-  defp by_arrival_time(struct1, struct2) do
-    Timex.before?(struct1.arrival_time, struct2.arrival_time)
-  end
-
-  defp insert_timestamp(%Station{} = map) do
-    %{map | timestamp: Timex.now}
+  defp add_to_struct(%Arrivals{} = updated_arrivals, %Station{} = cache) do
+    %{cache | arrivals: updated_arrivals}
   end
 
 end

@@ -3,23 +3,7 @@ defmodule Commuter.Station.ControllerTest do
   use Plug.Test
   alias Commuter.Station.Controller
 
-  @tooting "940GZZLUTBC"
-  @northern "northern"
-  @direction "inbound"
   @opts Commuter.Router.init([])
-
-  # test "returns OK from homepage" do
-  #   #create a test connection
-  #   conn = conn(:get, "/")
-  #
-  #   #invoke the plug
-  #   conn = Commuter.Router.call(conn, @opts)
-  #
-  #   #assert the response and the status
-  #   assert conn.state == :sent
-  #   assert conn.status == 200
-  #   assert conn.resp_body == "OK"
-  # end
 
   setup do
     bad_resp =
@@ -51,6 +35,11 @@ defmodule Commuter.Station.ControllerTest do
       Enum.map(responses, fn {_k,m} -> Enum.into(m.assigns, []) end)
       |> List.flatten
     Enum.each(assigns, fn {_k,v} -> assert is_atom(v) end)
+  end
+
+  test "a good request returns a string of json objects", %{responses: %{good_resp: resp}} do
+    {code, _maps} = Poison.decode(resp.resp_body)
+    assert code == :ok
   end
 
 
