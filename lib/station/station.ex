@@ -45,8 +45,9 @@ defmodule Commuter.Station do
 
   def init({{station_id, line_id}, station_name}) do
     IO.puts "Arrivals board is starting up for station #{station_id}"
+    tidy_name = tidy_name(station_name)
     initial_state =
-      %Station{station_id: station_id, line_id: line_id, station_name: station_name}
+      %Station{station_id: station_id, line_id: line_id, station_name: tidy_name}
     {:ok, initial_state}
   end
 
@@ -59,6 +60,10 @@ defmodule Commuter.Station do
 
   defp create_process_name(station_id, line_id) do
     "#{station_id}_#{line_id}" |> String.to_atom
+  end
+
+  defp tidy_name(string) do
+    String.replace(string, ~r/ Underground Station/, "")
   end
 
   # Business Logic
@@ -92,13 +97,6 @@ defmodule Commuter.Station do
         @tfl_api.take_body(response) |> create_cache(cache)
     end
   end
-
-  # defp create_cache(http_response_body, %Station{} = cache) do
-  #   new_struct = %Station{station_id: cache.station_id, line_id: cache.line_id}
-  #   http_response_body
-  #   |> Train.create_train_structs
-  #   |> Arrivals.build_arrivals_struct(new_struct)
-  # end
 
   defp create_cache(http_response_body, %Station{} = cache) do
     http_response_body
