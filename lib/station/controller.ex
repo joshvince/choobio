@@ -17,7 +17,8 @@ defmodule Commuter.Station.Controller do
   Fetches the station, line and direction params from the connection and tries
   to call the corresponding process to retrieve arrivals data.
 
-  Sends a response back to the client.
+  Sends a response back to the client - the response is a Station struct encoded
+  to a JSON String.
   """
   def get_arrivals(%Plug.Conn{} = conn) do
     conn
@@ -28,7 +29,6 @@ defmodule Commuter.Station.Controller do
   defp assign_arrival_params(%Plug.Conn{path_params: p} = conn) do
     conn
     |> Plug.Conn.assign(:pid, atomize_params({p["station_id"], p["line_id"]}))
-    |> Plug.Conn.assign(:direction, atomize_params(p["direction"]))
   end
 
   # atomize the params
@@ -50,13 +50,8 @@ defmodule Commuter.Station.Controller do
   defp call_process(%Plug.Conn{assigns: assigns} = conn) do
     assigns.pid
     |> Commuter.Station.get_arrivals
-    |> take_direction_list(assigns.direction)
     |> Poison.encode!
     |> send_response(200, conn)
-  end
-
-  defp take_direction_list(%Commuter.Station{} = station, direction) do
-    Map.get(station.arrivals, direction)
   end
 
   defp send_response(response_body, code, conn) do

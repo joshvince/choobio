@@ -34,7 +34,7 @@ defmodule Commuter.Router do
     |> Controller.get_all_stations
   end
 
-  get "/stations/:station_id/:line_id/:direction" do
+  get "/stations/:station_id/:line_id" do
     conn
     |> Controller.get_arrivals
   end
