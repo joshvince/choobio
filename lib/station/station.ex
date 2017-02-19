@@ -5,7 +5,7 @@ defmodule Commuter.Station do
   alias Commuter.Station.Arrivals
   alias __MODULE__, as: Station
 
-  defstruct [:station_id, :line_id, :arrivals, timestamp: Timex.zero]
+  defstruct [:station_id, :station_name, :line_id, :arrivals, timestamp: Timex.zero]
 
   @tfl_api Application.get_env(:commuter, :tfl_api)
   @vsn "0"
@@ -20,9 +20,9 @@ defmodule Commuter.Station do
   ```
   Station ID and line ID are both passed to the `init` function.
   """
-  def start_link(station_id, line_id) do
+  def start_link(station_id, station_name, line_id) do
     pname = create_process_name(station_id, line_id)
-    GenServer.start_link(__MODULE__, {station_id, line_id}, name: pname)
+    GenServer.start_link(__MODULE__, {{station_id, line_id}, station_name}, name: pname)
   end
 
   @doc """
@@ -43,9 +43,10 @@ defmodule Commuter.Station do
 
   # Server callbacks
 
-  def init({station_id, line_id}) do
+  def init({{station_id, line_id}, station_name}) do
     IO.puts "Arrivals board is starting up for station #{station_id}"
-    initial_state = %Station{station_id: station_id, line_id: line_id}
+    initial_state =
+      %Station{station_id: station_id, line_id: line_id, station_name: station_name}
     {:ok, initial_state}
   end
 
