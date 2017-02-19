@@ -63,9 +63,4 @@ defmodule Commuter.Station.Controller do
     Plug.Conn.resp(conn, code, response_body)
   end
 
-  # defp only_distance_in_seconds(list_of_trains) do
-  #   list_of_trains
-  #   |> Enum.map(fn %Train{time_to_station: time} -> "#{time} secs" end)
-  # end
-
 end
