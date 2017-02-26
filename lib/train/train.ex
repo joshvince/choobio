@@ -23,12 +23,16 @@ defmodule Commuter.Train do
       arrival_time: @tfl_api.to_datetime(map["expectedArrival"]),
       time_to_station: map["timeToStation"],
       destination: %{
-        destination_name: map["destinationName"],
+        destination_name: tidy_name(map["destinationName"]),
         destination_id: map["destinationNaptanId"]
       },
       train_id: map["vehicleId"],
       direction: map["direction"]
     }
+  end
+
+  defp tidy_name(string) do
+    String.replace(string, ~r/ Underground Station/, "")
   end
 
 
