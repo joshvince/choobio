@@ -75,7 +75,7 @@ defmodule Commuter.Tfl.Station do
 
   defp convert_to_struct(map) do
     lines = find_lines(map)
-    name = map["commonName"]
+    name = tidy_name(map["commonName"])
     id = map["naptanId"]
     %Commuter.Tfl.Station{id: id, name: name, lines: lines}
   end
@@ -88,6 +88,10 @@ defmodule Commuter.Tfl.Station do
 
   defp get_line_list(map) do
     map["lineIdentifier"]
+  end
+
+  defp tidy_name(string) do
+    String.replace(string, ~r/ Underground Station/, "")
   end
 
 end

@@ -5,7 +5,7 @@ defmodule Commuter.Station do
   alias Commuter.Station.Arrivals
   alias __MODULE__, as: Station
 
-  defstruct [:station_id, :line_id, :arrivals, timestamp: Timex.zero]
+  defstruct [:station_id, :station_name, :line_id, :arrivals, timestamp: Timex.zero]
 
   @tfl_api Application.get_env(:commuter, :tfl_api)
   @vsn "0"
@@ -20,9 +20,9 @@ defmodule Commuter.Station do
   ```
   Station ID and line ID are both passed to the `init` function.
   """
-  def start_link(station_id, line_id) do
+  def start_link(station_id, station_name, line_id) do
     pname = create_process_name(station_id, line_id)
-    GenServer.start_link(__MODULE__, {station_id, line_id}, name: pname)
+    GenServer.start_link(__MODULE__, {{station_id, line_id}, station_name}, name: pname)
   end
 
   @doc """
@@ -43,9 +43,11 @@ defmodule Commuter.Station do
 
   # Server callbacks
 
-  def init({station_id, line_id}) do
+  def init({{station_id, line_id}, station_name}) do
     IO.puts "Arrivals board is starting up for station #{station_id}"
-    initial_state = %Station{station_id: station_id, line_id: line_id}
+    tidy_name = tidy_name(station_name)
+    initial_state =
+      %Station{station_id: station_id, line_id: line_id, station_name: tidy_name}
     {:ok, initial_state}
   end
 
@@ -58,6 +60,10 @@ defmodule Commuter.Station do
 
   defp create_process_name(station_id, line_id) do
     "#{station_id}_#{line_id}" |> String.to_atom
+  end
+
+  defp tidy_name(string) do
+    String.replace(string, ~r/ Underground Station/, "")
   end
 
   # Business Logic
@@ -91,13 +97,6 @@ defmodule Commuter.Station do
         @tfl_api.take_body(response) |> create_cache(cache)
     end
   end
-
-  # defp create_cache(http_response_body, %Station{} = cache) do
-  #   new_struct = %Station{station_id: cache.station_id, line_id: cache.line_id}
-  #   http_response_body
-  #   |> Train.create_train_structs
-  #   |> Arrivals.build_arrivals_struct(new_struct)
-  # end
 
   defp create_cache(http_response_body, %Station{} = cache) do
     http_response_body

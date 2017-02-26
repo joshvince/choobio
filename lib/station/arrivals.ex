@@ -25,6 +25,8 @@ defmodule Commuter.Station.Arrivals do
     %{acc | outbound: [train | acc.outbound]}
   end
 
+  defp into_direction(%Train{} = train, %Arrivals{} = acc), do: acc
+
   defp sort_train_lists(%Arrivals{inbound: inb_list, outbound: outb_list} = struct) do
     new_inb = sort_chronologically_with_interval(inb_list)
     new_outb = sort_chronologically_with_interval(outb_list)
