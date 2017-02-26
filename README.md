@@ -34,10 +34,21 @@ Because OTP and Elixir are awesome, you don't have to worry about any of these
 crashing, as they will be automatically restarted :)
 
 ## API
+
+### Information
+
+**GET** `/stations`
+Returns a JSON array of station objects containing information needed to make
+correct requests to the other endpoints.  
+
+Each station object contains keys of `name`, `id` and `lines`. Name and ID are
+self-explanatory and lines is an array containing ids of tube lines served by
+that station.  
+
 ### Arrivals
 
 **GET** `/stations/:station_id/:line_id/:direction`  
-Returns a JSON list of arrivals at the specified station, on the given line, for
+Returns a JSON array of arrivals at the specified station, on the given line, for
 the given direction.  
 
 *Options:*
@@ -48,7 +59,7 @@ lowercase string with spaces replaced by dashes, like `northern` or `waterloo-ci
 - `direction` is either `"inbound"` or `"outbound"`  
 
 *Examples:*   
- 
+
 `/stations/940GZZLUTBC/northern/inbound` will return a list of Northern Line
 trains travelling Southbound from Tooting Bec Station.  
 `/stations/940GZZLUWLO/jubilee/outbound` will return a list of Jubilee Line

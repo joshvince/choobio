@@ -5,6 +5,7 @@ defmodule Commuter.Router do
 
   alias Commuter.Station.Controller
 
+  plug Corsica, origins: "*"
   plug Plug.Logger
   plug :match
   plug :dispatch
@@ -28,8 +29,14 @@ defmodule Commuter.Router do
     |> halt
   end
 
-  get "/stations/:station_id/:line_id/:direction" do
-    Controller.get_arrivals(conn)
+  get "/stations" do
+    conn
+    |> Controller.get_all_stations
+  end
+
+  get "/stations/:station_id/:line_id" do
+    conn
+    |> Controller.get_arrivals
   end
 
   match _ do

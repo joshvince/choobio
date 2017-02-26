@@ -20,12 +20,12 @@ defmodule Commuter.Station.StationSupervisor do
   end
 
   defp create_line_workers(%Commuter.Tfl.Station{lines: lines} = station) do
-    Enum.map(lines, &(create_worker(station.id, &1)) )
+    Enum.map(lines, &(create_worker(station.id, station.name, &1)) )
   end
 
-  defp create_worker(station_id, line_id) do
+  defp create_worker(station_id, station_name, line_id) do
     pname = create_process_name(station_id, line_id)
-    worker(Commuter.Station, [station_id, line_id], [id: pname])
+    worker(Commuter.Station, [station_id, station_name, line_id], [id: pname])
   end
 
   defp create_process_name(station_id, line_id) do
