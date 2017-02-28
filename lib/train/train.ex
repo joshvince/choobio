@@ -30,11 +30,8 @@ defmodule Commuter.Train do
       direction: map["direction"]
     }
   end
-
-  defp tidy_name(string) do
-    String.replace(string, ~r/ Underground Station/, "")
-  end
-
-
+  # Sometimes trains end up with no destination.
+  defp tidy_name(nil), do: "Check front of train"
+  defp tidy_name(string), do: String.replace(string, ~r/ Underground Station/, "")
 
 end
