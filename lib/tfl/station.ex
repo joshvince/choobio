@@ -33,7 +33,7 @@ defmodule Commuter.Tfl.Station do
   # Server callbacks
 
   def init(:ok) do
-    initial_state = create_station_list
+    initial_state = create_station_list()
     msg =
       "Initialised TFL Station list with #{inspect Enum.count(initial_state)} items"
     IO.puts msg

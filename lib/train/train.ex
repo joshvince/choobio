@@ -1,8 +1,9 @@
 defmodule Commuter.Train do
-  @enforce_keys [:arrival_time, :location, :destination, :train_id, :direction]
+  @enforce_keys [:arrival_time, :location, :destination, :train_id]
 
   defstruct [ :arrival_time, :time_to_station, :location, :train_id, :interval,
-              :direction, destination: %{destination_name: nil, destination_id: nil}]
+              direction: %{canonical: nil, name: nil},
+              destination: %{destination_name: nil, destination_id: nil}]
 
   alias __MODULE__, as: Train
 
@@ -27,11 +28,25 @@ defmodule Commuter.Train do
         destination_id: map["destinationNaptanId"]
       },
       train_id: map["vehicleId"],
-      direction: map["direction"]
+      direction: %{
+        canonical: map["direction"],
+        name: directionName(map["platformName"])
+      }
     }
   end
+
   # Sometimes trains end up with no destination.
   defp tidy_name(nil), do: "Check front of train"
   defp tidy_name(string), do: String.replace(string, ~r/ Underground Station/, "")
+
+  defp directionName(string) do
+    # ~r/\w*bound\b/
+    # \w*bound\b
+    Regex.run(~r/\w*bound\b/, string)
+    |> getMatch(string)
+  end
+  
+  defp getMatch(nil, string), do: string
+  defp getMatch([match | _rest], string), do: match
 
 end
