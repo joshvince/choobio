@@ -102,12 +102,17 @@ defmodule Commuter.Station do
     http_response_body
     |> Train.create_train_structs
     |> Arrivals.build_arrivals
-    |> add_to_struct(cache)
+    |> update_arrivals(cache)
+    |> insert_timestamp
   end
 
-
-  defp add_to_struct(%Arrivals{} = updated_arrivals, %Station{} = cache) do
+  defp update_arrivals(%Arrivals{} = updated_arrivals, %Station{} = cache) do
     %{cache | arrivals: updated_arrivals}
+  end
+
+  defp insert_timestamp(%Station{} = cache) do
+    time = Timex.now
+    %{cache | timestamp: time}
   end
 
 end
