@@ -26,7 +26,11 @@ defmodule Choobio.Web.ChannelCase do
   end
 
 
-  setup _tags do
+  setup tags do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Choobio.Repo)
+    unless tags[:async] do
+      Ecto.Adapters.SQL.Sandbox.mode(Choobio.Repo, {:shared, self()})
+    end
     :ok
   end
 

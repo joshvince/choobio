@@ -5,10 +5,14 @@
 # is restricted to this project.
 use Mix.Config
 
+# General application configuration
+config :choobio,
+  ecto_repos: [Choobio.Repo]
+
 # Configures the endpoint
 config :choobio, Choobio.Web.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "A5YGr+oOUA+mjCycOfZEIqAR+wcjElg12iLzLVZq4OprFDH8WJWoHMWboLAUPb3d",
+  secret_key_base: "GatByZkLPg8JPSVek8DARGKsn13rdxj/e6pnyZgQuQNvStQ2oztx/WeWtuV+YZxS",
   render_errors: [view: Choobio.Web.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Choobio.PubSub,
            adapter: Phoenix.PubSub.PG2]
