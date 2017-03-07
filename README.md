@@ -1,66 +1,18 @@
-# Choob
-Choob is a service that provides a little extra information about the London Underground.  
+# Choobio
 
-This repo covers the backend service, the client-side app is written in React and is accessible [here](https://github.com/joshvince/commuter-web)
+To start your Phoenix server:
 
-## Setting up this Repo locally
-Getting this set up is as simple as a few commands, but you need Elixir installed
-on to your machine. The Elixir Docs have an
-[easy install guide](http://elixir-lang.org/install.html).
+  * Install dependencies with `mix deps.get`
+  * Start Phoenix endpoint with `mix phx.server`
 
-Once you've got that installed, just clone the directory and `cd` into it...  
+Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-Install dependencies with `mix deps.get`  
-Run tests with `mix test`  
-Start iex with `iex -S mix`  
+Ready to run in production? Please [check our deployment guides](http://www.phoenixframework.org/docs/deployment).
 
-## What happens on startup?
-When this application is started, two supervisors are spun up:  
+## Learn more
 
-### TFL Supervisor
-This supervisor currently gets station data from the TFL api.  
-On startup, it will get a list of all tube stations and store it to memory.  
-Then, this is used to make API calls to TFL.  
-
-*Note: In the `test` env, `Commuter.Tfl.Mock` - a Mock version of the TFL API -
-is used. Mix handles this distinction for you.*  
-
-### Station Supervisor
-This supervisor will take the list of tube stations grabbed from TFL, and will
-spawn and monitor a process for each combination of station/line. These processes
-are then available for you to access via endpoints, explained below.  
-
-Because OTP and Elixir are awesome, you don't have to worry about any of these
-crashing, as they will be automatically restarted :)
-
-## API
-
-### Information
-
-**GET** `/stations`
-Returns a JSON array of station objects containing information needed to make
-correct requests to the other endpoints.  
-
-Each station object contains keys of `name`, `id` and `lines`. Name and ID are
-self-explanatory and lines is an array containing ids of tube lines served by
-that station.  
-
-### Arrivals
-
-**GET** `/stations/:station_id/:line_id/:direction`  
-Returns a JSON array of arrivals at the specified station, on the given line, for
-the given direction.  
-
-*Options:*
-- `station_id` must be a valid `NaptanId` assigned to a TFL stopPoint that is served
-by at least one `tube` line.
-- `line_id` must be a valid tube id used by TFL. If in doubt, this is a
-lowercase string with spaces replaced by dashes, like `northern` or `waterloo-city`
-- `direction` is either `"inbound"` or `"outbound"`  
-
-*Examples:*   
-
-`/stations/940GZZLUTBC/northern/inbound` will return a list of Northern Line
-trains travelling Southbound from Tooting Bec Station.  
-`/stations/940GZZLUWLO/jubilee/outbound` will return a list of Jubilee Line
-trains travelling Eastbound from Waterloo Station.
+  * Official website: http://www.phoenixframework.org/
+  * Guides: http://phoenixframework.org/docs/overview
+  * Docs: https://hexdocs.pm/phoenix
+  * Mailing list: http://groups.google.com/group/phoenix-talk
+  * Source: https://github.com/phoenixframework/phoenix
