@@ -36,7 +36,7 @@ defmodule Choobio.Web.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_choobio_key",
-    signing_salt: "/6ycQ0Je"
+    signing_salt: "cb9dGHla"
 
   plug Choobio.Web.Router
 

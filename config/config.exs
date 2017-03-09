@@ -12,7 +12,7 @@ config :choobio,
 # Configures the endpoint
 config :choobio, Choobio.Web.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "GatByZkLPg8JPSVek8DARGKsn13rdxj/e6pnyZgQuQNvStQ2oztx/WeWtuV+YZxS",
+  secret_key_base: "GfIWZiU3ZFBszrMY/t57OT0TaV3C8wm5NhE3TZV6pNGS35pW6HiBtY+lFA1s5HWg",
   render_errors: [view: Choobio.Web.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Choobio.PubSub,
            adapter: Phoenix.PubSub.PG2]
