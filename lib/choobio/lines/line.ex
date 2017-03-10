@@ -1,9 +1,8 @@
 defmodule Choobio.Line do
+  @moduledoc """
+  Handles the creation of Line models for insertion into the DB.
+  """
   use Ecto.Schema
-  import Ecto
-  import Ecto.Changeset
-  import Ecto.Query, only: [from: 1, from: 2]
-
   alias __MODULE__, as: Line
 
   schema "lines" do
