@@ -1,10 +1,10 @@
-defmodule Choobio.Station.StationSupervisor do
+defmodule Choobio.Station.PlatformSupervisor do
   use Supervisor
   alias Choobio.{Station,Line}
 
   def start_link do
     children = Station.get_all_stations() |> create_all_workers()
-    opts = [strategy: :one_for_one, name: StationSupervisor]
+    opts = [strategy: :one_for_one, name: PlatformSupervisor]
     {:ok, _pid} = Supervisor.start_link(children, opts)
   end
 
