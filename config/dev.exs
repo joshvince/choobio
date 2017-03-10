@@ -30,6 +30,8 @@ config :choobio, Choobio.Web.Endpoint,
 # configured to run both http and https servers on
 # different ports.
 
+config :choobio, :tfl_api, Choobio.Tfl
+
 # Watch static and templates for browser reloading.
 config :choobio, Choobio.Web.Endpoint,
   live_reload: [
