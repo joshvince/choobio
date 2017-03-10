@@ -6,7 +6,7 @@ defmodule Choobio.Station do
   import Ecto.Query, only: [from: 2]
   alias __MODULE__, as: Station
   alias Choobio.Repo
-
+  
   schema "stations" do
     field :name, :string
     field :naptanId, :string
@@ -44,7 +44,5 @@ defmodule Choobio.Station do
     Repo.get_by(Station, naptanId: natpan_id)
     |> Repo.preload(:lines)
   end
-
-
 
 end
