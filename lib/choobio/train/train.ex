@@ -3,54 +3,43 @@ defmodule Choobio.Train do
   alias __MODULE__, as: Train
   alias Choobio.Tfl
 
-  def get_trains do
-    Tfl.get_all_arrivals
-    |> Enum.map(fn x ->
-      %{"location" => x["currentLocation"], "station" => x["naptanId"],
-        "timeToArrival" => x["timeToStation"], "vehicleId" => x["vehicleId"],
-        "platformName" => x["platformName"]} end)
-    |> by_train
-  end
 
-  def by_train(list) do
-    Enum.reduce(list, %{}, &group_by_train/2)
-  end
+	def start_link(vehicle_id, starting_location, next_station) do
+		pname = String.to_atom(vehicle_id)
+		init_args = {vehicle_id, starting_location, next_station}
+		{:ok, _} = GenServer.start_link(__MODULE__, init_args, name: pname)
+	end
 
-  defp group_by_train(el, acc) do
-    Map.update(acc, el["vehicleId"], [el], &add_to_location_list(&1, el))
-  end
+	def init({vehicle_id, location, station}) do
+		state = %{id: vehicle_id, location: location, next_station: station}
+		{:ok, state}
+	end
 
-  defp add_to_location_list(list, el) do
-    location = el["location"]
-    [location | list]
-  end
+	def get_location(process_name) do
+		GenServer.call(process_name, :get_location)
+	end
 
-  def by_station(list) do
-    Enum.reduce(list, %{}, &group_by_station/2)
-  end
+	def update(process_name, new_data) do
+		GenServer.cast(process_name, {:update_location, new_data})
+	end
 
-  defp group_by_station(el, acc) do
-    Map.update(acc, el["station"], [el], &add_to_list(&1, el))
-  end
+	def handle_call(:get_location, _from, state) do
+		{:reply, state, state}
+	end
 
-  defp add_to_list(list, el) do
-    [el | list]
-  end
+	def handle_cast({:update_location, new_data}, state) do
+		new_state = update_location(new_data, state)
+		now = DateTime.utc_now()
+		IO.puts "\n#{now.hour}:#{now.minute}:#{now.second} :: #{inspect new_state}\n"
+		{:noreply, new_state}
+	end
 
-  def track_train(vehicle_id) do
-    get_trains
-    |> Enum.find(fn x -> x["vehicleId"] == vehicle_id end)
-    |> take_location
-    # |> IO.puts
-  end
-
-  def northbound?(map) do
-    [dir | _rest] = String.split(map["platformName"], " ")
-    dir == "Northbound"
-  end
-
-  def take_location(train) do
-    train["location"]
-  end
+	defp update_location(new_data, old_location) do
+		new_loc = Map.get(new_data, :location)
+		new_stat = Map.get(new_data, :station)
+		old_location
+		|> Map.put(:next_station, new_stat)
+		|> Map.put(:location, new_loc)
+	end
 
 end
