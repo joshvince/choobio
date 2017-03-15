@@ -11,7 +11,7 @@ defmodule Choobio.Line.Monitor do
 	end
 
 	def get_new_data_from_tfl(id) do
-		get_trains
+		get_trains()
 		|> find_train(id)
 	end
 

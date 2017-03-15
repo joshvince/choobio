@@ -3,24 +3,39 @@ defmodule Choobio.Train do
   alias __MODULE__, as: Train
   alias Choobio.Tfl
 
-
-	def start_link(vehicle_id, starting_location, next_station) do
-		pname = String.to_atom(vehicle_id)
-		init_args = {vehicle_id, starting_location, next_station}
-		{:ok, _} = GenServer.start_link(__MODULE__, init_args, name: pname)
+	def start_link({vehicle_id, line_id}) do
+		init_args = {vehicle_id}
+		{:ok, _} = GenServer.start_link(__MODULE__, init_args, name: via_tuple({vehicle_id, line_id}))
 	end
 
-	def init({vehicle_id, location, station}) do
-		state = %{id: vehicle_id, location: location, next_station: station}
+  def via_tuple({vehicle_id, line_id}) do
+    registry = get_registry_name(line_id)
+    {:via, Registry, {registry, vehicle_id}}
+  end
+
+	def init({vehicle_id}) do
+		state = %{id: vehicle_id, location: "init", next_station: "init"}
 		{:ok, state}
 	end
 
-	def get_location(process_name) do
-		GenServer.call(process_name, :get_location)
+  defp get_registry_name(line_id) do
+    String.to_atom("#{line_id}_registry")
+  end
+
+  def whereis({vehicle_id, line_id}) do
+    registry = get_registry_name(line_id)
+    case Registry.lookup(registry, vehicle_id) do
+      [{pid, _}] -> pid
+      [] -> nil
+    end
+  end
+
+	def get_location({vehicle_id, line_id}) do
+		GenServer.call(via_tuple({vehicle_id, line_id}), :get_location)
 	end
 
-	def update(process_name, new_data) do
-		GenServer.cast(process_name, {:update_location, new_data})
+	def update({vehicle_id, line_id}, new_data) do
+		GenServer.cast(via_tuple({vehicle_id, line_id}), {:update_location, new_data})
 	end
 
 	def handle_call(:get_location, _from, state) do
