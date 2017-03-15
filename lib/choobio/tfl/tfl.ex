@@ -12,7 +12,7 @@ defmodule Choobio.Tfl do
 
   Appends the app key and app ID to the url before making a get request to `url`.
   """
-  def call_tfl(url, opts \\ []) do
+  defp call_tfl(url, opts \\ []) do
     url
     |> add_credentials
     |> HTTPotion.get(opts)
@@ -26,14 +26,14 @@ defmodule Choobio.Tfl do
   @doc """
   Returns `true` if the response from TFL indicated success, false otherwise.
   """
-  def successful_response?(response) do
+  defp successful_response?(response) do
     HTTPotion.Response.success?(response)
   end
 
   @doc """
   Helper function for grabbing only the body of an HTTP response.
   """
-  def take_body(%HTTPotion.Response{body: body}), do: body
+  defp take_body(%HTTPotion.Response{body: body}), do: body
 
 #####
   # Application Setup - these are called only when running seeds.
@@ -93,6 +93,18 @@ defmodule Choobio.Tfl do
 
   defp remove_suffix(name_string) do
     String.replace(name_string, ~r/ Underground Station/, "")
+  end
+
+
+#####
+  # CALL FOR ALL ARRIVALS ON THE NETWORK
+#####
+
+  @all_trains "https://api.tfl.gov.uk/Mode/tube/Arrivals?count=5"
+  def get_all_arrivals(url \\ "https://api.tfl.gov.uk/line/northern/arrivals") do
+    call_tfl(url)
+    |> take_body
+    |> Poison.decode!
   end
 
 end
