@@ -10,6 +10,9 @@ defmodule Choobio.Line.Supervisor do
   use Supervisor
   alias Choobio.Line.Dispatcher
 
+  @doc """
+  Starts the supervision tree outlined in the module docs.
+  """
   def start_link(line_id) do
     registry_name = String.to_atom("#{line_id}_registry")
     children = [
