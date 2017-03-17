@@ -47,7 +47,7 @@ defmodule Choobio.Station.Platform do
   # Server callbacks
 
   def init({{station_id, line_id}, station_name}) do
-    IO.puts "Arrivals board is starting up for station #{station_id} for #{line_id}"
+    # IO.puts "Arrivals board is starting up for station #{station_id} for #{line_id}"
     initial_state =
       %Platform{station_id: station_id, line_id: line_id, station_name: station_name}
     {:ok, initial_state}
