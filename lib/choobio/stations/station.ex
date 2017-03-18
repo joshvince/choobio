@@ -3,10 +3,9 @@ defmodule Choobio.Station do
   Handles the creation of, and interaction with, station models in the DB.
   """
   use Ecto.Schema
-  import Ecto.Query, only: [from: 2]
   alias __MODULE__, as: Station
   alias Choobio.Repo
-  
+
   schema "stations" do
     field :name, :string
     field :naptanId, :string
