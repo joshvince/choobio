@@ -9,6 +9,9 @@ config :choobio, Choobio.Web.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+# Use the Mock for tests when calling TFL's API.
+config :choobio, :tfl_api, Choobio.Tfl.Mock
+
 # Configure your database
 config :choobio, Choobio.Repo,
   adapter: Ecto.Adapters.Postgres,
