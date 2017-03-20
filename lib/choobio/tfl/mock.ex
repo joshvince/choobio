@@ -63,6 +63,23 @@ defmodule Choobio.Tfl.Mock do
      "source" => "0001-01-01T00:00:00"}, "towards" => "Morden via CX",
    "vehicleId" => "101"},
  %{"$type" => "Tfl.Api.Presentation.Entities.Prediction, Tfl.Api.Presentation.Entities",
+	 "bearing" => "", "currentLocation" => "Departed Clapham Common",
+	 "destinationName" => "Morden Underground Station",
+	 "destinationNaptanId" => "940GZZLUMDN", "direction" => "inbound",
+	 "expectedArrival" => "2017-03-17T08:23:49Z", "id" => "1957467630",
+	 "lineId" => "northern", "lineName" => "Northern", "modeName" => "tube",
+	 "naptanId" => "940GZZLUTBC", "operationType" => 1,
+	 "platformName" => "Southbound - Platform 2",
+	 "stationName" => "Tooting Bec Underground Station",
+	 "timeToLive" => "2017-03-17T08:20:49Z", "timeToStation" => 371,
+	 "timestamp" => "2017-03-17T08:19:38Z",
+	 "timing" => %{"$type" => "Tfl.Api.Presentation.Entities.PredictionTiming, Tfl.Api.Presentation.Entities",
+		 "countdownServerAdjustment" => "00:00:00",
+		 "insert" => "0001-01-01T00:00:00", "read" => "2017-03-17T08:19:25.366Z",
+		 "received" => "0001-01-01T00:00:00", "sent" => "2017-03-17T08:19:38Z",
+		 "source" => "0001-01-01T00:00:00"}, "towards" => "Morden via CX",
+	 "vehicleId" => "101"},
+ %{"$type" => "Tfl.Api.Presentation.Entities.Prediction, Tfl.Api.Presentation.Entities",
    "bearing" => "", "currentLocation" => "At Brent Cross Platform 2",
    "destinationName" => "Morden Underground Station",
    "destinationNaptanId" => "940GZZLUMDN", "direction" => "inbound",
@@ -109,10 +126,7 @@ defmodule Choobio.Tfl.Mock do
 		|> Enum.map( &to_struct(%Choobio.Tfl.Arrival{}, &1))
   end
 
-	@doc """
-	Converts a map with stringed keys into a struct. This function was pinched
-	from Jose Valim ;)
-	"""
+	# Jose Valim's method of converting string-keyed maps to structs
 	defp to_struct(kind, attrs) do
 		struct = struct(kind)
 		Enum.reduce Map.to_list(struct), struct, fn {k, _}, acc ->

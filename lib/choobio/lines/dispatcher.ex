@@ -98,7 +98,7 @@ defmodule Choobio.Line.Dispatcher do
 
 	defp assign_to_id(map, acc) do
 		case Map.fetch(acc, map.vehicleId) do
-			{:ok, list} -> %{acc | map.vehicleId => [list | map]}
+			{:ok, list} -> %{acc | map.vehicleId => [map | list]}
 			:error -> Map.put(acc, map.vehicleId, [map])
 		end
 	end

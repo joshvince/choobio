@@ -1,10 +1,9 @@
 defmodule Choobio.Line.DispatcherTest do
+	require Logger
 	use ExUnit.Case
 	alias Choobio.Line.Dispatcher
 
 	@tfl_api Application.get_env(:choobio, :tfl_api)
-
-
 
 	setup do
 		# start the Line Supervisor and the registry
@@ -19,13 +18,6 @@ defmodule Choobio.Line.DispatcherTest do
 		Enum.each(list, fn {id, %Choobio.Tfl.Arrival{} = struct} ->
 			assert id == struct.vehicleId
 		end)
-
-		GenServer.stop(sup)
-	end
-
-	test "creates or dispatches to a process for each vehicle", %{api_resp: resp, sup_pid: sup} do
-		Dispatcher.update_all_arrivals("northern")
-		assert Dispatcher.train_process_count == Enum.count(resp)
 
 		GenServer.stop(sup)
 	end

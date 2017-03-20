@@ -1,4 +1,5 @@
 defmodule Choobio.Train do
+	require Logger
   @moduledoc """
   When started under a supervision tree, like `Choobio.Line.Supervisor`, this module
   creates a genserver representing one train on the network.
@@ -71,8 +72,8 @@ defmodule Choobio.Train do
   """
 	def handle_cast({:update_location, new_data}, state) do
 		new_state = update_location_data(new_data, state)
-		# now = DateTime.utc_now()
-		# IO.puts "\n#{now.hour}:#{now.minute}:#{now.second} :: #{inspect new_state}\n"
+		now = DateTime.utc_now()
+		Logger.info "\n#{now.hour}:#{now.minute}:#{now.second} :: #{inspect new_state}\n"
 		{:noreply, new_state}
 	end
 

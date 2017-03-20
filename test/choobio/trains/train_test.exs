@@ -8,7 +8,7 @@ defmodule Choobio.TrainTest do
 	  {:ok, %{supervisor_pid: sup_pid}}
 	end
 
-	test "train is creating with initial state of just the vehicle ID", %{supervisor_pid: sup} do
+	test "train is creating with initial state of just the vehicle ID", %{supervisor_pid: _sup} do
 		{:ok, _pid} = Train.start_link({"002", "TrainTest"})
 		%Train{id: id} = Train.get_location({"002", "TrainTest"})
 		assert id == "002"

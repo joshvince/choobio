@@ -68,13 +68,13 @@ defmodule Choobio.Tfl do
   # CALL FOR ALL ARRIVALS ON THE NETWORK
 #####
 
-  @all_trains "https://api.tfl.gov.uk/Mode/tube/Arrivals?count=5"
-  def get_all_arrivals(url \\ "https://api.tfl.gov.uk/line/northern/arrivals") do
-    call_tfl(url)
+  # the old url for every single train was: "https://api.tfl.gov.uk/Mode/tube/Arrivals?count=5"
+
+	def get_all_arrivals(line_id) do
+    call_tfl("https://api.tfl.gov.uk/line/#{line_id}/arrivals")
     |> take_body
     |> Poison.decode!(as: [%Choobio.Tfl.Arrival{}])
   end
-
 
 #####
   # Helper functions:
@@ -97,5 +97,7 @@ defmodule Choobio.Tfl do
   end
 
 	defp take_body(%HTTPotion.Response{body: body}), do: body
+	defp take_body(error), do: error
+
 
 end
