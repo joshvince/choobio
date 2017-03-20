@@ -4,10 +4,11 @@ defmodule Choobio.Line.Dispatcher do
   train process, creating a new one if necessary.
   """
   use Supervisor
+	@tfl_api Application.get_env(:choobio, :tfl_api)
 
   # Initialisation
 
-  def start_link(line_id) do
+  def start_link(_line_id) do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
@@ -16,7 +17,32 @@ defmodule Choobio.Line.Dispatcher do
     supervise(children, strategy: :simple_one_for_one)
   end
 
-  # Dispatching to trains
+	@doc """
+	Calls out to TFL for the arrivals on the line, and then dispatches this
+	information to the train processes, using the `vehicleId` as an identifier.
+
+	If no process is registered under the vehicle id, it will create the process
+	and initialise it with the data.
+	"""
+	def update_all_arrivals(line_id) do
+		get_arrivals_data(line_id)
+		|> dispatch_to_trains(line_id)
+	end
+
+	defp dispatch_to_trains(list, line_id) do
+		Enum.each(list, fn {id, data} ->
+			case find_or_create_train({id, line_id}) do
+				{:ok, id} -> update_location(id, line_id, data)
+				_ -> :error
+			end
+		end)
+	end
+
+	defp update_location(train_id, line_id, location_data) do
+		Choobio.Train.update_location({train_id, line_id}, location_data)
+	end
+
+  # Managing Supervised Train Processes
 
   @doc """
   Used to lookup a train process using its vehicle and line identifiers.
@@ -34,11 +60,7 @@ defmodule Choobio.Line.Dispatcher do
     end
   end
 
-  @doc """
-  Returns true if a train process already exists under supervision by this module,
-  false otherwise.
-  """
-  def train_process_exists?({vehicle_id, line_id}) do
+  defp train_process_exists?({vehicle_id, line_id}) do
     registry = get_registry_name(line_id)
     case Registry.lookup(registry, vehicle_id) do
       [] -> false
@@ -46,15 +68,10 @@ defmodule Choobio.Line.Dispatcher do
     end
   end
 
-  @doc """
-  Creates and Supervises a train process. See `Choobio.Train` for the details on
-  exactly what it is creating.
-
-  Will return error tuples if the process already exists, or any other reason.
-  """
-  def create_train_process({vehicle_id, line_id}) do
+	# create train processes unless they have already been started.
+  defp create_train_process({vehicle_id, line_id}) do
     case Supervisor.start_child(__MODULE__, [{vehicle_id, line_id}]) do
-      {:ok, pid} ->
+      {:ok, _pid} ->
         {:ok, vehicle_id}
       {:error, {:already_started, _pid}} ->
         {:error, :process_already_exists}
@@ -62,6 +79,41 @@ defmodule Choobio.Line.Dispatcher do
         {:error, other}
     end
   end
+
+	# Calling out to TFL
+
+	@doc """
+	Calls out to TFL and parses the response into a list of vehicle IDs and one
+	`%Tfl.Arrival` struct per vehicle.
+	"""
+	def get_arrivals_data(line_id) do
+		@tfl_api.get_all_arrivals(line_id)
+		|> vehicle_id_map
+		|> next_station_only
+	end
+
+	defp vehicle_id_map(list_of_maps) do
+		Enum.reduce(list_of_maps, %{}, &assign_to_id/2)
+	end
+
+	defp assign_to_id(map, acc) do
+		case Map.fetch(acc, map.vehicleId) do
+			{:ok, list} -> %{acc | map.vehicleId => [map | list]}
+			:error -> Map.put(acc, map.vehicleId, [map])
+		end
+	end
+
+	defp next_station_only(vehicle_id_map) do
+		vehicle_id_map
+		|> Enum.map(fn {id, list} ->
+			{id, shortest_time_to_station(list)}
+		end)
+	end
+
+	defp shortest_time_to_station(list) do
+		Enum.sort(list, fn (a,b) -> a.timeToStation < b.timeToStation end)
+		|> List.first
+	end
 
   # Helper Functions
 
@@ -72,9 +124,6 @@ defmodule Choobio.Line.Dispatcher do
     Supervisor.which_children(__MODULE__) |> Enum.count
   end
 
-  @doc """
-  Shortcut to getting the registry name.
-  """
   defp get_registry_name(line_id) do
     String.to_atom("#{line_id}_registry")
   end

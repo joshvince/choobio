@@ -1,4 +1,5 @@
 defmodule Choobio.Train do
+	require Logger
   @moduledoc """
   When started under a supervision tree, like `Choobio.Line.Supervisor`, this module
   creates a genserver representing one train on the network.
@@ -11,9 +12,8 @@ defmodule Choobio.Train do
   """
   use GenServer
   alias __MODULE__, as: Train
-  alias Choobio.Tfl
 
-  # Initialisation
+	defstruct [:id, :location, :next_station, :time_to_station]
 
   @doc """
   Starts a train process and registers its name in the registry relating to `line_id`.
@@ -22,8 +22,9 @@ defmodule Choobio.Train do
   under the key "001".
   """
 	def start_link({vehicle_id, line_id}) do
-		init_args = {vehicle_id}
-		{:ok, _} = GenServer.start_link(__MODULE__, init_args, name: via_tuple({vehicle_id, line_id}))
+		initial_data = %{id: vehicle_id}
+		name = via_tuple({vehicle_id, line_id})
+		{:ok, _} = GenServer.start_link(__MODULE__, initial_data, name: name)
 	end
 
   # Public API
@@ -53,7 +54,7 @@ defmodule Choobio.Train do
   Updates the process state with the new location data, which has presumably
   arrived via `Dispatcher` from TFL.
   """
-	def update({vehicle_id, line_id}, new_data) do
+	def update_location({vehicle_id, line_id}, new_data) do
 		GenServer.cast(via_tuple({vehicle_id, line_id}), {:update_location, new_data})
 	end
 
@@ -70,20 +71,19 @@ defmodule Choobio.Train do
   See `&update/2` for details
   """
 	def handle_cast({:update_location, new_data}, state) do
-		new_state = update_location(new_data, state)
+		new_state = update_location_data(new_data, state)
 		now = DateTime.utc_now()
-		IO.puts "\n#{now.hour}:#{now.minute}:#{now.second} :: #{inspect new_state}\n"
+		Logger.info "\n#{now.hour}:#{now.minute}:#{now.second} :: #{inspect new_state}\n"
 		{:noreply, new_state}
 	end
 
   # Private functions
 
-	defp update_location(new_data, old_location) do
-		new_loc = Map.get(new_data, :location)
-		new_stat = Map.get(new_data, :station)
-		old_location
-		|> Map.put(:next_station, new_stat)
-		|> Map.put(:location, new_loc)
+	defp update_location_data(%Choobio.Tfl.Arrival{} = new_data, old_location) do
+		%{old_location |
+			:next_station => new_data.naptanId,
+			:location => new_data.currentLocation,
+			:time_to_station => new_data.timeToStation}
 	end
 
   @doc """
@@ -99,8 +99,8 @@ defmodule Choobio.Train do
   @doc """
   Initialises the process with a basic location map.
   """
-  def init({vehicle_id}) do
-    state = %{id: vehicle_id, location: "init", next_station: "init"}
+  def init(data) do
+    state = %Train{id: data.id}
     {:ok, state}
   end
 
