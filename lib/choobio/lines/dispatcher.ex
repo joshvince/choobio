@@ -18,8 +18,17 @@ defmodule Choobio.Line.Dispatcher do
   end
 
 	@doc """
+	Calls `&update_all_arrivals/1` every `interval` (30secs by default).
+
+	See doc for `&update_all_arrivals/1` for what this is actually doing.
+	"""
+	def schedule_arrival_updates(line_id, interval \\ 30_000) do
+		:timer.apply_interval(interval, __MODULE__, :update_all_arrivals, [line_id])
+	end
+
+	@doc """
 	Calls out to TFL for the arrivals on the line, and then dispatches this
-	information to the train processes, using the `vehicleId` as an identifier.
+	information to the train processes,	using the `vehicleId` as an identifier.
 
 	If no process is registered under the vehicle id, it will create the process
 	and initialise it with the data.

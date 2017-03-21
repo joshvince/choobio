@@ -6,6 +6,10 @@ defmodule Choobio.Line.DispatcherTest do
 	@tfl_api Application.get_env(:choobio, :tfl_api)
 
 	setup do
+		# start the registry
+		Registry.start_link(:unique, :platform_registry)
+		# start all the platforms.
+		Choobio.Station.Platform.start_link("940GZZLUGGN", "Golders Green Underground Station", "northern")
 		# start the Line Supervisor and the registry
 		{:ok, pid} = Choobio.Line.Supervisor.start_link "northern"
 		# get the arrivals data from the mock tfl api
@@ -23,7 +27,9 @@ defmodule Choobio.Line.DispatcherTest do
 	end
 
 	test "updates train data based on data supplied", %{api_resp: api_resp, sup_pid: sup} do
+		# update the arrivals
 		Dispatcher.update_all_arrivals("northern")
+
 		location_data = List.first(api_resp)
 		train = Choobio.Train.get_location({location_data.vehicleId, "northern"})
 
