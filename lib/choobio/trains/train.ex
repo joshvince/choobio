@@ -13,8 +13,9 @@ defmodule Choobio.Train do
   use GenServer
   alias __MODULE__, as: Train
 
-	defstruct [	:id, :location, :next_station, :time_to_station, :expected_arrival,
-							:direction, :line_id]
+	defstruct [	:id, :location, :next_station, :time_to_station,
+							:direction, :line_id, :expected_arrival,
+							at_platform: %{currently: nil, ticks: 0, total_ticks: 0}]
 
   @doc """
   Starts a train process and registers its name in the registry relating to `line_id`.
@@ -45,11 +46,9 @@ defmodule Choobio.Train do
 		GenServer.cast(via_tuple({vehicle_id, line_id}), {:update_location, new_data})
 	end
 
-	@doc """
-	TODO: DOC THIS UP
-	"""
-	def arriving_at_platform(pid, state) do
-		GenServer.cast(pid, {:arriving_at_platform, state})
+	#TODO: this!
+	def at_platform(pid, state) do
+		# GenServer.cast to the pid (which should be yourself) and the platform/station whatever
 	end
 
 # Genserver
@@ -66,18 +65,13 @@ defmodule Choobio.Train do
   """
 	def handle_cast({:update_location, new_data}, state) do
 		new_state = update_location_data(new_data, state)
-		print_state(new_state)
-		if new_state.time_to_station < 30 do
-			arriving_at_platform(self(), new_state)
-		end
-		{:noreply, new_state}
+		# print_state(new_state)
+		check_for_arrival(state, new_state)
 	end
 
-	def handle_cast({:arriving_at_platform, state}, state) do
-		Logger.info "I am arriving at #{inspect state.next_station} in #{inspect state.time_to_station} seconds.\n"
-		# res = Choobio.Station.Platform.new_arrival({state.next_station, state.line_id}, state)
-		# Logger.info "\n\n\nresponse from station: #{inspect res}\n\n\n"
-		{:noreply, state}
+	#TODO: this!!
+	def handle_cast({:at_platform}) do
+
 	end
 
 	@doc """
@@ -106,6 +100,25 @@ defmodule Choobio.Train do
 			:next_station => new_data.naptanId, :location => new_data.currentLocation,
 			:time_to_station => new_data.timeToStation, :expected_arrival => new_data.expectedArrival,
 			:direction => new_data.direction, :line_id => new_data.lineId}
+	end
+
+	#TODO: this !!
+
+	# the train hasn't arrived at a station yet (because the next_station is still the same)
+	defp check_for_arrival(%Train{next_station: same} = old, %Train{next_station: same} = new_state) do
+		{:noreply, new_state}
+	end
+	# the train has arrived at a platform, because the next station has changed.
+	defp check_for_arrival(old_state, new_data) do
+		# update the at_platform key in `update_at_platform`
+		# the return value is the new state, to be returned in the tuple below.
+		{:noreply, new_state}
+	end
+
+	defp update_at_platform(%Train{at_platform: p_map} = old_state, new_data) do
+		# update the at_platform map by adding the previous station to current
+		# cast out to at_platform (send to self())
+		# return the new state
 	end
 
 	defp print_state(state) do
