@@ -46,9 +46,8 @@ defmodule Choobio.Train do
 		GenServer.cast(via_tuple({vehicle_id, line_id}), {:update_location, new_data})
 	end
 
-	#TODO: this!
-	def at_platform(pid, state) do
-		# GenServer.cast to the pid (which should be yourself) and the platform/station whatever
+	def arrived_at_platform(pid, state) do
+		GenServer.cast(pid, {:at_platform, state})
 	end
 
 # Genserver
@@ -65,13 +64,12 @@ defmodule Choobio.Train do
   """
 	def handle_cast({:update_location, new_data}, state) do
 		new_state = update_location_data(new_data, state)
-		# print_state(new_state)
 		check_for_arrival(state, new_state)
 	end
 
 	#TODO: this!!
-	def handle_cast({:at_platform}) do
-
+	def handle_cast({:at_platform, new_state}, state) do
+		{:noreply, new_state}
 	end
 
 	@doc """
@@ -102,28 +100,18 @@ defmodule Choobio.Train do
 			:direction => new_data.direction, :line_id => new_data.lineId}
 	end
 
-	#TODO: this !!
-
 	# the train hasn't arrived at a station yet (because the next_station is still the same)
 	defp check_for_arrival(%Train{next_station: same} = old, %Train{next_station: same} = new_state) do
 		{:noreply, new_state}
 	end
 	# the train has arrived at a platform, because the next station has changed.
 	defp check_for_arrival(old_state, new_data) do
-		# update the at_platform key in `update_at_platform`
-		# the return value is the new state, to be returned in the tuple below.
-		{:noreply, new_state}
-	end
-
-	defp update_at_platform(%Train{at_platform: p_map} = old_state, new_data) do
-		# update the at_platform map by adding the previous station to current
+		updated_map = %{old_state.at_platform | :currently => old_state.next_station, :ticks => 1}
+		new_state = %{new_data | :at_platform => updated_map}
 		# cast out to at_platform (send to self())
+		arrived_at_platform(self(), new_state)
 		# return the new state
-	end
-
-	defp print_state(state) do
-		now = DateTime.utc_now()
-		Logger.info "\n#{now.hour}:#{now.minute}:#{now.second} :: #{inspect state.id} is #{inspect state.location} arriving at #{inspect state.next_station} in #{inspect state.time_to_station}\n"
+		{:noreply, new_state}
 	end
 
 end

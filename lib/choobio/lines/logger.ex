@@ -20,7 +20,7 @@ defmodule Choobio.Line.Logger do
 		track(%{}, vehicle_id, line_id, termination_id)
 	end
 
-	defp track(acc, vehicle_id, line_id) do
+	defp track(acc, vehicle_id, line_id, termination_id) do
 		:timer.sleep 10_000
 		Choobio.Line.Dispatcher.get_arrivals_data(line_id)
 		|> find_tracked_train(vehicle_id)
@@ -28,7 +28,7 @@ defmodule Choobio.Line.Logger do
 	end
 
 	defp find_tracked_train(list, vehicle_id) do
-		{_id, struct} = Enum.find(list, fn {id, map} -> id == vehicle_id end)
+		{_id, struct} = Enum.find(list, fn {id, _map} -> id == vehicle_id end)
 		struct
 	end
 
@@ -41,7 +41,7 @@ defmodule Choobio.Line.Logger do
 		timestamp = format_timestamp([now.hour, now.minute, now.second])
 		new_acc = Map.put(acc, timestamp, new_el)
 		Logger.info "\n#{timestamp}: #{inspect new_el}\n"
-		track(new_acc, vehicle_id, line_id, termnation_id)
+		track(new_acc, vehicle_id, line_id, termination_id)
 	end
 
 	defp format_timestamp(input) do
