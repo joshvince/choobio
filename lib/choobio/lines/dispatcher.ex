@@ -94,6 +94,8 @@ defmodule Choobio.Line.Dispatcher do
 	@doc """
 	Calls out to TFL and parses the response into a list of vehicle IDs and one
 	`%Tfl.Arrival` struct per vehicle.
+
+	[{"001", %Tfl.Arrival{}}, {"002", %Tfl.Arrival{}}]
 	"""
 	def get_arrivals_data(line_id) do
 		@tfl_api.get_all_arrivals(line_id)

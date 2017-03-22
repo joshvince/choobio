@@ -13,7 +13,9 @@ defmodule Choobio.Application do
       # Start the endpoint when the application starts
       supervisor(Choobio.Web.Endpoint, []),
 			supervisor(Registry, [:unique, :platform_registry]),
-      supervisor(Choobio.Station.PlatformSupervisor, [])
+      supervisor(Choobio.Station.PlatformSupervisor, []),
+			# DEV: start the northern line supervisor
+			supervisor(Choobio.Line.Supervisor, ["northern"])
       # Start your own worker by calling: Choobio.Worker.start_link(arg1, arg2, arg3)
       # worker(Choobio.Worker, [arg1, arg2, arg3]),
     ]
