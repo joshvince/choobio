@@ -15,7 +15,7 @@ defmodule Choobio.Train do
 
 	defstruct [	:id, :location, :next_station, :time_to_station,
 							:direction, :line_id, :expected_arrival,
-							at_platform: %{currently: nil, ticks: 0, total_ticks: 0}]
+							at_platform: %{current: nil, ticks: 0, total_ticks: 0}]
 
   @doc """
   Starts a train process and registers its name in the registry relating to `line_id`.
@@ -64,7 +64,7 @@ defmodule Choobio.Train do
   """
 	def handle_cast({:update_location, new_data}, state) do
 		new_state = update_location_data(new_data, state)
-		check_for_arrival(state, new_state)
+		handle_location_update(state, new_state)
 	end
 
 	#TODO: this!!
@@ -100,17 +100,69 @@ defmodule Choobio.Train do
 			:direction => new_data.direction, :line_id => new_data.lineId}
 	end
 
-	# the train hasn't arrived at a station yet (because the next_station is still the same)
-	defp check_for_arrival(%Train{next_station: same} = old, %Train{next_station: same} = new_state) do
+	defp handle_location_update(old_state, new_data) do
+		case train_at_platform?(old_state.at_platform) do
+			false -> check_for_arrival(old_state, new_data)
+			true -> check_for_departure(old_state, new_data)
+		end
+	end
+
+	defp train_at_platform?(%{current: nil}), do: false
+	defp train_at_platform?(_anything), do: true
+
+#train is still at the station
+	defp check_for_departure(_old_state, %{location: "At" <> _rest} = new_data) do
+		new_state = update_platform_map(:add_tick, new_data)
 		{:noreply, new_state}
 	end
-	# the train has arrived at a platform, because the next station has changed.
+#train has left the station
+	defp check_for_departure(old_state, new_data) do
+		new_state = update_platform_map(:departed_station, new_data)
+		{:noreply, new_state}
+	end
+
+	defp update_platform_map(:add_tick, %Train{at_platform: map} = state) do
+		new = Map.update(map, :ticks, 1, & &1 + 1)
+		%{state | at_platform: new}
+	end
+
+	defp update_platform_map(:departed_station, %Train{at_platform: map} = state) do
+		new_total = (map.ticks + map.total_ticks)
+		pmap = %{:current => nil, :ticks => 0, :total_ticks => new_total}
+		%{state | at_platform: pmap}
+	end
+
+	defp update_platform_map(:arrived_at, station_id, %Train{at_platform: map} = state) do
+		pmap = %{map | :current => station_id, :ticks => 1}
+		%{state | :at_platform => pmap}
+	end
+
+#########
+
+	#TODO: sometimes trains receive a 'depart' message then somehow end up back
+	# at the same station. Need to be able to handle that somehow
+
+#########
+
+	# the train hasn't arrived at a station yet (because the next_station is still the same)
+	defp check_for_arrival(%{next_station: same} = _old_state, %{next_station: same} = new_state) do
+		{:noreply, new_state}
+	end
+
+	# the train has arrived at the station
+	defp check_for_arrival(old_state, %{location: "At" <> _rest} = new_data) do
+		new_state = update_platform_map(:arrived_at, old_state.next_station, new_data)
+		{:noreply, new_state}
+	end
+
+	# the next station has changed, but the train is not at a platform. Revert back and wait
 	defp check_for_arrival(old_state, new_data) do
-		updated_map = %{old_state.at_platform | :currently => old_state.next_station, :ticks => 1}
-		new_state = %{new_data | :at_platform => updated_map}
-		# cast out to at_platform (send to self())
-		arrived_at_platform(self(), new_state)
-		# return the new state
+		# if the old next station was nil, we don't want it popped back in.
+		new_state =
+			case old_state.next_station do
+				nil -> new_data
+				_ -> %{ new_data | :next_station => old_state.next_station }
+			end
 		{:noreply, new_state}
 	end
 
