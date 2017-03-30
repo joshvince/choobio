@@ -3,6 +3,8 @@ defmodule Choobio.TrainTest do
 	alias Choobio.{Train}
 
 	setup do
+		#start up the tooting bec platform
+		Choobio.Station.Platform.start_link("940GZZLUTBC", "Tooting Bec", "northern")
 		broadway_arrival =
 			%Choobio.Tfl.Arrival{
 				currentLocation: "Between Tooting Broadway and Tooting Bec",
@@ -86,5 +88,15 @@ defmodule Choobio.TrainTest do
 		assert %{current: nil, total_ticks: 1, ticks: 0} = state.at_platform
 	end
 
+	test "a train leaves a timestamp behind when it departs a platform", arrivals do
+		# arrive at tooting bec
+		Train.update_location({"025", "northern"}, arrivals.bec_arrival)
+		:timer.sleep 100
+		# depart tooting bec
+		Train.update_location({"025", "northern"}, arrivals.bec_departure)
+		:timer.sleep 100
+		[dep | _] = Choobio.Station.Platform.get_departures({"940GZZLUTBC", "northern"})
+		%{departed: %DateTime{}} = dep
+	end
 
 end

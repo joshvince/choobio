@@ -1,9 +1,11 @@
 defmodule Choobio.Station.Platform do
 	require Logger
+	use Timex
 	use GenServer
   alias __MODULE__, as: Platform
 
-  defstruct [:station_id, :station_name, :line_id, :arrivals, :timestamp]
+  defstruct [:station_id, :station_name, :line_id, :timestamp,
+						 :at_platform, departures: []]
 
   @doc """
   Used to start a supervised process. Registers the name in the :platform_registry.
@@ -37,8 +39,16 @@ defmodule Choobio.Station.Platform do
     GenServer.call(via_tuple({station_id, line_id}), :get_arrivals)
   end
 
+	def get_departures({station_id, line_id}) do
+		GenServer.call(via_tuple({station_id, line_id}), :get_departures)
+	end
+
 	def new_arrival({station_id, line_id}, train_data) do
 		GenServer.call(via_tuple({station_id, line_id}), {:new_arrival, train_data})
+	end
+
+	def departed({station_id, line_id}, train_id) do
+		GenServer.cast(via_tuple({station_id, line_id}), {:departed, train_id})
 	end
 
 
@@ -54,16 +64,41 @@ defmodule Choobio.Station.Platform do
 
   def handle_call(:get_arrivals, _from, %Platform{} = state) do
 		Logger.info "Arrivals for #{state.station_name}: #{inspect state.arrivals}"
-    {:reply, state.arrivals, state}
+    {:reply, :test, state}
   end
 
-	def handle_call({:new_arrival, train_data}, _from, %Platform{} = state) do
-		new_state = update_arrival(state, train_data)
-		{:reply, new_state, new_state}
+	# if the train is the first arrival at this station... Something went wrong
+	def handle_call({:new_arrival, vehicle_id}, _from, %Platform{departures: []} = state) do
+		new_state = add_new_arrival(state, vehicle_id)
+		{:reply, :first_arrival, new_state}
 	end
 
-	defp update_arrival(%Platform{} = state, train_data) do
-		Map.put(state, :arrivals, train_data)
+	def handle_call({:new_arrival, vehicle_id}, _from, %Platform{} = state) do
+		[latest | _rest] = state.departures
+		new_state = add_new_arrival(state, vehicle_id)
+		{:reply, latest, new_state}
+	end
+
+	def handle_call(:get_departures, _from, %Platform{departures: list} = state) do
+		{:reply, list, state}
+	end
+
+	def handle_cast({:departed, _train_id}, %Platform{} = state) do
+		new_state = handle_departure(state)
+		{:noreply, new_state}
+	end
+
+	# Private Functions
+
+	defp add_new_arrival(%Platform{} = state, vehicle) do
+		vehicle_map = %{id: vehicle, arrived: Timex.now(), departed: nil}
+		Map.put(state, :at_platform, vehicle_map)
+	end
+
+	defp handle_departure(%Platform{at_platform: platform_map, departures: dep_list} = state) do
+		updated_pmap = %{platform_map | :departed => Timex.now()}
+		new_deps = [updated_pmap | dep_list]
+		%{state | :at_platform => %{}, :departures => new_deps}
 	end
 
 end

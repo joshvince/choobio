@@ -25,7 +25,6 @@ defmodule Choobio.Line.DispatcherTest do
 		Dispatcher.update_all_arrivals("northern")
 		location_data = @tfl_api.get_all_arrivals("northern") |> List.first()
 		train = Choobio.Train.get_location({location_data.vehicleId, "northern"})
-
 		assert train.next_station == location_data.naptanId
 		assert train.location == location_data.currentLocation
 		assert train.time_to_station == location_data.timeToStation
