@@ -4,7 +4,7 @@ defmodule Commuter.Mixfile do
   def project do
     [app: :commuter,
      version: "0.1.0",
-     elixir: "~> 1.4",
+     elixir: "~> 1.6",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
@@ -30,11 +30,11 @@ defmodule Commuter.Mixfile do
   defp deps do
     [
       {:cowboy, "~>1.0"},
-      {:plug, "~>1.3"},
+      {:plug, "~>1.4.4"},
       {:httpotion, "~> 3.0.2"},
       {:poison, "~> 3.0"},
-      {:timex, "~> 3.0"},
-      {:distillery, "~> 1.0"},
+      {:timex, "~> 3.1"},
+      {:distillery, "~> 1.5.2"},
       {:corsica, "~> 0.5.0"}
     ]
   end
