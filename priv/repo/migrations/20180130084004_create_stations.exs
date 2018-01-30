@@ -4,7 +4,7 @@ defmodule Choobio.Repo.Migrations.CreateStations do
   def change do
     create table(:stations) do
       add :name, :string
-
+      add :naptan_id, :string
       timestamps()
     end
 

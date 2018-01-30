@@ -59,6 +59,10 @@ config :logger, level: :info
 #     config :choobio, ChoobioWeb.Endpoint, server: true
 #
 
+# Use the Real TFL API 
+
+config :choobio, :tfl_api, Choobio.Tfl
+
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
 import_config "prod.secret.exs"

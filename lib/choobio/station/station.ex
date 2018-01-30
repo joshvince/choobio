@@ -1,12 +1,16 @@
-defmodule Choobio.Arrivals do
-  @moduledoc """
-  The Arrivals context.
-  """
-
-  import Ecto.Query, warn: false
+defmodule Choobio.Station do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias Choobio.Station
   alias Choobio.Repo
 
-  alias Choobio.Arrivals.Station
+
+  schema "stations" do
+    field :name, :string
+    field :naptan_id, :string
+  
+    timestamps()
+  end
 
   @doc """
   Returns the list of stations.
@@ -89,16 +93,10 @@ defmodule Choobio.Arrivals do
     Repo.delete(station)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking station changes.
-
-  ## Examples
-
-      iex> change_station(station)
-      %Ecto.Changeset{source: %Station{}}
-
-  """
-  def change_station(%Station{} = station) do
-    Station.changeset(station, %{})
+  @doc false
+  def changeset(%Station{} = station, attrs) do
+    station
+    |> cast(attrs, [:name, :naptan_id])
+    |> validate_required([:name, :naptan_id])
   end
 end

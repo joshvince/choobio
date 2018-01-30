@@ -55,3 +55,7 @@ config :choobio, Choobio.Repo,
   database: "choobio_dev",
   hostname: "localhost",
   pool_size: 10
+
+# Use the Mock TFL API 
+
+config :choobio, :tfl_api, Choobio.Tfl.Mock
