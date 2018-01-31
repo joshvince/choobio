@@ -52,4 +52,12 @@ defmodule Choobio.Tfl.Mock do
       }
     ]
   end
+
+  def retrieve_all_lines(_url \\ "fake") do
+    IO.puts "Using Mock TFL to get line list..."
+    [
+      %{"id" => "victoria", "modeName" => "tube", "name" => "Victoria"},
+      %{"id" => "northern", "modeName" => "tube", "name" => "Northern"}
+    ]
+  end
 end

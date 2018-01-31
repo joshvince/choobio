@@ -5,7 +5,7 @@ defmodule Choobio.Tfl.Initialiser do
   WARNING: you should only be running this when you need to re-populate the 
   DB, it includes insane calls to get literally all stations etc.
   """
-  alias Choobio.Station
+  alias Choobio.{Station, Line}
 
   @tfl_api Application.get_env(:choobio, :tfl_api)
 
@@ -14,16 +14,30 @@ defmodule Choobio.Tfl.Initialiser do
     |> Enum.map( &create_station(&1) )
   end
 
+  def create_all_tube_lines() do
+    retrieve_all_lines()
+    |> Enum.map( &create_line(&1) )
+  end
+
   # Private Functions
 
   defp create_station(station) do
     Station.create_station(station)
   end
 
+  defp create_line(line) do
+    Line.create_line(line)
+  end
+
   defp retrieve_all_tube_stations() do
     @tfl_api.retrieve_all_stations()
     |> find_only_tube_stations()
-    |> Enum.map( &take_relevant_data(&1) )
+    |> Enum.map( &to_station_map(&1) )
+  end
+
+  defp retrieve_all_lines() do
+    @tfl_api.retrieve_all_lines()
+    |> Enum.map( &to_line_map(&1) )
   end
 
   defp find_only_tube_stations(list) do
@@ -35,7 +49,11 @@ defmodule Choobio.Tfl.Initialiser do
     Enum.member?(modes, "tube")
   end
 
-  defp take_relevant_data(map) do
+  defp to_station_map(map) do
     %{name: map["commonName"], naptan_id: map["naptanId"]}
+  end
+
+  defp to_line_map(map) do
+    %{name: map["name"], id: map["id"]}
   end
 end

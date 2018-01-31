@@ -4,6 +4,7 @@ defmodule Choobio.Tfl do
   """
 
   @tfl_all_stations_url "https://api.tfl.gov.uk/StopPoint/Type/NaptanMetroStation"
+  @tfl_all_lines_url "https://api.tfl.gov.uk/Line/Mode/tube"
   @vsn "0"
 
   @doc """
@@ -21,9 +22,16 @@ defmodule Choobio.Tfl do
     |> decode_response()
   end
 
+  @callback retrieve_all_lines(url :: String.t) :: [%{}]
+  def retrieve_all_lines(url \\ @tfl_all_lines_url) do
+    IO.puts "Calling TFL for the list of lines..."
+    call_tfl(url)
+    |> decode_response()
+  end
+
   # Private Functions
 
-  defp call_tfl(url, opts) do
+  defp call_tfl(url, opts \\ []) do
     url
     |> add_credentials
     |> HTTPotion.get(opts)
