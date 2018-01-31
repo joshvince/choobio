@@ -9,3 +9,6 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+# Create tube lines and tube stations from the TFL API
+Choobio.Tfl.Initialiser.initialise()

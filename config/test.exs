@@ -17,3 +17,7 @@ config :choobio, Choobio.Repo,
   database: "choobio_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+# Use the Mock TFL API 
+
+config :choobio, :tfl_api, Choobio.Tfl.Mock
