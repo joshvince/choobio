@@ -4,22 +4,19 @@ defmodule Choobio.Station do
   alias Choobio.Station
   alias Choobio.Repo
 
+  @primary_key {:naptan_id, :string, autogenerate: false}
 
   schema "stations" do
     field :name, :string
-    field :naptan_id, :string
+    many_to_many :lines, Choobio.Line, 
+      [ join_through: "stations_lines", 
+        join_keys: [station_naptan_id: :naptan_id, line_id: :id] ]
   
     timestamps()
   end
 
   @doc """
   Returns the list of stations.
-
-  ## Examples
-
-      iex> list_stations()
-      [%Station{}, ...]
-
   """
   def list_stations do
     Repo.all(Station)
@@ -29,17 +26,8 @@ defmodule Choobio.Station do
   Gets a single station.
 
   Raises `Ecto.NoResultsError` if the Station does not exist.
-
-  ## Examples
-
-      iex> get_station!(123)
-      %Station{}
-
-      iex> get_station!(456)
-      ** (Ecto.NoResultsError)
-
   """
-  def get_station!(id), do: Repo.get!(Station, id)
+  def get_station!(naptan_id), do: Repo.get!(Station, naptan_id)
 
   @doc """
   Creates a station.
@@ -54,8 +42,11 @@ defmodule Choobio.Station do
 
   """
   def create_station(attrs \\ %{}) do
+    lines = Enum.map(attrs.lines, &Choobio.Line.get_line!(&1))
+    
     %Station{}
     |> Station.changeset(attrs)
+    |> put_assoc(:lines, lines)
     |> Repo.insert()
   end
 
@@ -79,15 +70,6 @@ defmodule Choobio.Station do
 
   @doc """
   Deletes a Station.
-
-  ## Examples
-
-      iex> delete_station(station)
-      {:ok, %Station{}}
-
-      iex> delete_station(station)
-      {:error, %Ecto.Changeset{}}
-
   """
   def delete_station(%Station{} = station) do
     Repo.delete(station)

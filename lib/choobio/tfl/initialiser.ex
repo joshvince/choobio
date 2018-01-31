@@ -9,17 +9,26 @@ defmodule Choobio.Tfl.Initialiser do
 
   @tfl_api Application.get_env(:choobio, :tfl_api)
 
-  def create_all_tube_stations() do
+  @doc """
+  Initialises a database by calling TFL API and creating records in the
+  database for each station and tube line.
+  """
+  def initialise() do
+    create_all_tube_lines()
+    create_all_tube_stations()
+  end
+
+  # Private Functions
+
+  defp create_all_tube_stations() do
     retrieve_all_tube_stations()
     |> Enum.map( &create_station(&1) )
   end
 
-  def create_all_tube_lines() do
+  defp create_all_tube_lines() do
     retrieve_all_lines()
     |> Enum.map( &create_line(&1) )
   end
-
-  # Private Functions
 
   defp create_station(station) do
     Station.create_station(station)
@@ -50,8 +59,17 @@ defmodule Choobio.Tfl.Initialiser do
   end
 
   defp to_station_map(map) do
-    %{name: map["commonName"], naptan_id: map["naptanId"]}
+    %{  name: map["commonName"], naptan_id: map["naptanId"], 
+        lines: getTubeIds(map["lineModeGroups"]) }
   end
+
+  defp getTubeIds(list_of_lines) do
+    list_of_lines
+    |> Enum.find( fn(%{"modeName" => modeName}) -> modeName == "tube" end )
+    |> take_ids()
+  end
+
+  defp take_ids(%{"lineIdentifier" => lines}), do: lines
 
   defp to_line_map(map) do
     %{name: map["name"], id: map["id"]}

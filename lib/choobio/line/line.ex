@@ -8,7 +8,10 @@ defmodule Choobio.Line do
 
   schema "lines" do
     field :name, :string
-    
+    many_to_many :stations, Choobio.Station, 
+      [ join_through: "stations_lines", 
+      join_keys: [line_id: :id, station_naptan_id: :naptan_id] ]
+
     timestamps()
   end
 

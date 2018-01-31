@@ -19,15 +19,6 @@ defmodule Choobio.Tfl.Mock do
     IO.puts "Using Mock TFL to get station list..."
     [
       %{
-        "commonName" => "Waterloo", "modes" => ["tube", "bus"],
-        "naptanId" => "940GZZLUWLO",
-        "lineModeGroups" => [%{"modeName" => "tube",
-                              "lineIdentifier" => [ "northern", "jubilee",
-                                                    "bakerloo", "waterloo-city"]},
-                            %{"modeName" => "bus",
-                              "lineIdentifier" => ["10"]}]
-      },
-      %{
         "commonName" => "Tooting Bec", "modes" => ["tube"],
         "naptanId" => "940GZZLUTBC",
         "lineModeGroups" => [%{"modeName" => "tube",
@@ -57,7 +48,9 @@ defmodule Choobio.Tfl.Mock do
     IO.puts "Using Mock TFL to get line list..."
     [
       %{"id" => "victoria", "modeName" => "tube", "name" => "Victoria"},
-      %{"id" => "northern", "modeName" => "tube", "name" => "Northern"}
+      %{"id" => "northern", "modeName" => "tube", "name" => "Northern"},
+      %{"id" => "circle", "modeName" => "tube", "name" => "Circle"},
+      %{"id" => "district", "modeName" => "tube", "name" => "District"}
     ]
   end
 end
