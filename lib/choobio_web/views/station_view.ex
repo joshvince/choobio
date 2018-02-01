@@ -11,7 +11,7 @@ defmodule ChoobioWeb.StationView do
   end
 
   def render("station.json", %{station: station}) do
-    %{id: station.id,
+    %{id: station.naptan_id,
       name: station.name}
   end
 end

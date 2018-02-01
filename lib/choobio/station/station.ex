@@ -17,9 +17,13 @@ defmodule Choobio.Station do
 
   @doc """
   Returns the list of stations.
+  Supplying an atom representing a valid association will preload each
+  record with the given association. 
   """
-  def list_stations do
+  def list_stations(),      do: Repo.all(Station)
+  def list_stations(:lines) do
     Repo.all(Station)
+    |> Enum.map( &preload_lines(&1) )
   end
 
   @doc """
@@ -27,7 +31,14 @@ defmodule Choobio.Station do
 
   Raises `Ecto.NoResultsError` if the Station does not exist.
   """
-  def get_station!(naptan_id), do: Repo.get!(Station, naptan_id)
+  def get_station!(naptan_id),        do: Repo.get!(Station, naptan_id)
+  def get_station!(naptan_id, :lines) do
+    get_station!(naptan_id)
+    |> preload_lines()
+  end
+
+  defp preload_lines(%Station{} = station), do: Repo.preload(station, :lines)
+  defp preload_lines(error),                do: error
 
   @doc """
   Creates a station.

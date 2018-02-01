@@ -1,10 +1,10 @@
-defmodule Commuter.Station.Arrivals do
+defmodule Choobio.Station.Platform.Arrivals do
   @moduledoc """
   Handles functionality for arrivals data. This data has already been parsed from
   TFL-json to Train structs, and ends up being returned as an Arrivals struct.
   """
   defstruct [inbound: %{trains: [], name: "Inbound"}, outbound: %{trains: [], name: "Outbound"}]
-  alias Commuter.{Train}
+  alias Choobio.Line.Train
   alias __MODULE__, as: Arrivals
 
   def build_arrivals(train_structs) do
@@ -26,7 +26,7 @@ defmodule Commuter.Station.Arrivals do
     %{acc | outbound: add_to_train_list(acc.outbound, train)}
   end
 
-  defp into_direction(%Train{}, %Arrivals{} = acc), do: acc
+  defp into_direction(%Train{} = train, %Arrivals{} = acc), do: acc
 
   defp add_to_train_list(map, new_train) do
     Map.update!(map, :trains, &([new_train | &1]) )

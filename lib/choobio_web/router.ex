@@ -22,7 +22,15 @@ defmodule ChoobioWeb.Router do
   
 
   # Other scopes may use custom stacks.
-  # scope "/api", ChoobioWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", ChoobioWeb do
+    pipe_through :api
+
+    resources "/stations", StationController, except: [:new, :delete, :edit]
+
+    scope "/arrivals" do
+      get "/:station_id/:line_id", ArrivalsController, :show
+    
+    end
+
+  end
 end
