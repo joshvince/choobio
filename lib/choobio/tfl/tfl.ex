@@ -29,6 +29,15 @@ defmodule Choobio.Tfl do
     |> decode_response()
   end
 
+  @doc """
+  TODO: doc this up!
+  """
+  @callback line_arrivals(station_id :: String.t, line_id :: String.t) :: String.t
+  def line_arrivals(station_id, line_id) do
+    "https://api.tfl.gov.uk/Line/#{line_id}/Arrivals?stopPointId=#{station_id}"
+    |> call_tfl
+  end
+
   # Private Functions
 
   defp call_tfl(url, opts \\ []) do
@@ -44,5 +53,29 @@ defmodule Choobio.Tfl do
     {:ok, list} = Poison.decode(body)
     list
   end
+
+  # Parsing Functions
+
+  @doc """
+  Converts timestamp strings to `DateTime` structs, removing milliseconds.
+  """
+  @callback to_datetime(timestamp :: String.t) :: %DateTime{}
+  def to_datetime(timestamp) do
+    timestamp
+    |> remove_ms
+    |> add_timezone
+    |> Timex.parse!("{ISO:Extended}")
+  end
+
+  defp remove_ms(timestamp) do
+    case String.split(timestamp, ".") do
+      [time, _ms] ->
+        time
+      [_time] ->
+        timestamp
+    end
+  end
+
+  defp add_timezone(string), do: "#{string}Z"
 
 end
