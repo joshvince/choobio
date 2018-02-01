@@ -9,7 +9,6 @@ defmodule Choobio.Tfl.Mock do
   
   Returns four stations:
   - Clapham Junction
-  - Waterloo
   - Tooting Bec
   - Victoria
 
@@ -53,6 +52,20 @@ defmodule Choobio.Tfl.Mock do
       %{"id" => "district", "modeName" => "tube", "name" => "District"}
     ]
   end
+
+   # fake one to avoid having to mention specifics in tests...
+   def line_arrivals(:test), do: line_arrivals("940GZZLUTBC", "northern")
+
+   @doc """
+  A smoke screen - this will always return true because we don't need to
+  test the failure of a mock api call... Let it crash!!
+  """
+  def successful_response?(_response), do: true
+
+  @doc """
+  This doesn't do anything. Just a smoke screen.
+  """
+  def take_body(list), do: list
 
   @doc """
   Returns a JSON string full of train objects as if it was from TFL.

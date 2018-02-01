@@ -38,6 +38,18 @@ defmodule Choobio.Tfl do
     |> call_tfl
   end
 
+  @doc """
+  Returns `true` if the response from TFL indicated success, false otherwise.
+  """
+  def successful_response?(response) do
+    HTTPotion.Response.success?(response)
+  end
+
+  @doc """
+  Helper function for grabbing only the body of an HTTP response.
+  """
+  def take_body(%HTTPotion.Response{body: body}), do: body
+
   # Private Functions
 
   defp call_tfl(url, opts \\ []) do

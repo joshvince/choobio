@@ -14,6 +14,7 @@ defmodule Choobio.Application do
       supervisor(ChoobioWeb.Endpoint, []),
       # Start your own worker by calling: Choobio.Worker.start_link(arg1, arg2, arg3)
       # worker(Choobio.Worker, [arg1, arg2, arg3]),
+      worker(Choobio.Station.Platform.PlatformSupervisor, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
