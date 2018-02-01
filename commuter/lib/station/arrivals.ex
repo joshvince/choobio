@@ -26,7 +26,7 @@ defmodule Commuter.Station.Arrivals do
     %{acc | outbound: add_to_train_list(acc.outbound, train)}
   end
 
-  defp into_direction(%Train{} = train, %Arrivals{} = acc), do: acc
+  defp into_direction(%Train{}, %Arrivals{} = acc), do: acc
 
   defp add_to_train_list(map, new_train) do
     Map.update!(map, :trains, &([new_train | &1]) )

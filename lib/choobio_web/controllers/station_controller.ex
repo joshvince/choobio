@@ -9,7 +9,7 @@ defmodule ChoobioWeb.StationController do
   end
 
   def show(conn, %{"id" => id}) do
-    station = Choobio.get_station!(id)
+    station = Choobio.get_station(id)
     render(conn, "show.json", station: station)
   end
 end

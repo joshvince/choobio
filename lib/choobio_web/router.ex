@@ -26,5 +26,11 @@ defmodule ChoobioWeb.Router do
     pipe_through :api
 
     resources "/stations", StationController, except: [:new, :delete, :edit]
+
+    scope "/arrivals" do
+      get "/:station_id/:line_id", ArrivalsController, :show
+    
+    end
+
   end
 end

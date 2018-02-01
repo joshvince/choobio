@@ -47,6 +47,6 @@ defmodule Choobio.Line.Train do
   end
   
   defp getMatch(nil, string), do: string
-  defp getMatch([match | _rest], string), do: match
+  defp getMatch([match | _rest], _string), do: match
 
 end
