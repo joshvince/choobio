@@ -14,15 +14,11 @@ defmodule Choobio do
 ######
 
   @doc """
-  List all the stations in the DB. 
-  Supplying an atom representing a valid association will preload each
-  record with the given association. 
+  List all the stations in the DB, with the line associations preloaded.
   """
   def list_stations(), do: Station.list_stations()
-  def list_stations(:lines), do: Station.list_stations(:lines)
 
-  def get_station(id), do: Station.get_station!(id)
-  def get_station(id, :lines), do: Station.get_station!(id, :lines)
+  def get_station(id), do: Station.get_station!(id, :lines)
 
 
 ######

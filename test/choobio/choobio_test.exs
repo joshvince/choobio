@@ -38,26 +38,11 @@ defmodule Choobio.ChoobioTest do
     assert fetched_id == station.naptan_id
   end
 
-  test "list_stations/1 returns all stations with the lines loaded" do
-    line_fixture()
-    station = station_fixture()
-
-    assert Choobio.list_stations(:lines) == [station]
-  end
-
-  test "get_station/1 returns the station with the given id" do
-    line_fixture()
-    station = station_fixture()
-    %{naptan_id: fetched_id} = Choobio.get_station(station.naptan_id)
-
-    assert fetched_id == station.naptan_id
-  end
-
-  test "get_station/2 returns the station with the lines loaded" do
+  test "get_station/1 returns the station with the lines loaded" do
     line_fixture()
     station = station_fixture()
     
-    assert Choobio.get_station(station.naptan_id, :lines) == station
+    assert Choobio.get_station(station.naptan_id) == station
   end
 
   test "get_arrivals/2 gets the arrivals from the given platform" do
